@@ -1,3 +1,16 @@
 spring:
   application:
-    name: backend
+    name: bright-tracker
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/bright_tracker
+    username: bright_tracker
+    password: bright_tracker
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  flyway:
+    enabled: true
