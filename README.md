@@ -158,6 +158,16 @@ operations.
 | PUT | `/api/students/{studentId}/guardians/{guardianId}` | Update the relationship |
 | DELETE | `/api/students/{studentId}/guardians/{guardianId}` | Remove the relationship |
 
+### Student Meals
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/students/{studentId}/meals` | Create a daily meal record |
+| GET | `/api/students/{studentId}/meals` | List a student's meal records |
+| GET | `/api/students/{studentId}/meals/{recordDate}` | Get a meal record by date |
+| PUT | `/api/students/{studentId}/meals/{recordDate}` | Update a meal record |
+| DELETE | `/api/students/{studentId}/meals/{recordDate}` | Delete a meal record |
+
 ## Database Relationships
 
 ```text
@@ -168,11 +178,18 @@ Classroom
     └── classroom_staff_assignments
 
 Student
-└── Guardians
-    └── student_guardians
-        ├── relationship
-        ├── is_primary_contact
-        └── is_emergency_contact
+├── Guardians
+│   └── student_guardians
+│       ├── relationship
+│       ├── is_primary_contact
+│       └── is_emergency_contact
+│
+└── Meal Records
+    └── student_meal_records
+        ├── record_date
+        ├── breakfast_eaten
+        ├── lunch_eaten
+        └── dinner_eaten
 
 Guardian
 └── Students
@@ -200,6 +217,17 @@ bright-tracker/
 ├── docker-compose.yml
 └── README.md
 ```
+
+### Student Meal Tracking
+
+- Create daily meal records for students
+- Track breakfast, lunch, and dinner participation
+- View all meal records for a student
+- View a student's meal record by date
+- Update daily meal participation
+- Delete meal records
+- Prevent duplicate meal records for the same student and date
+- Automatically track created and updated timestamps
 
 ## Local Development
 
