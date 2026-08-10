@@ -1,9 +1,9 @@
 # Bright Tracker
 
-Bright Tracker is a full-stack school management application designed for a
-school. The application provides a tablet-friendly interface for managing
-students, staff, classrooms, guardians, attendance, and other day-to-day school
-operations.
+Bright Tracker is a full-stack school management application designed to support
+day-to-day school operations. The application provides a tablet-friendly
+interface for managing students, staff, classrooms, guardians, attendance,
+meals, allergies, and other school operations.
 
 ## Tech Stack
 
@@ -95,78 +95,112 @@ operations.
 - Remove guardian relationships
 - Prevent duplicate student-guardian relationships
 
+### Student Meal Tracking
+
+- Create daily meal records for students
+- Track breakfast, lunch, and dinner participation
+- View all meal records for a student
+- View a student's meal record by date
+- Update daily meal participation
+- Delete meal records
+- Prevent duplicate meal records for the same student and date
+- Automatically track created and updated timestamps
+
+### Student Allergy Management
+
+- Record known student allergies
+- Track allergy severity as mild, moderate, or severe
+- Store allergy-specific notes and safety instructions
+- Support multiple allergies per student
+- View all allergies for a student
+- View an individual allergy by ID
+- Update allergy information
+- Delete allergy records
+- Prevent duplicate allergens for the same student
+- Treat allergen names as case-insensitive for duplicate detection
+
 ## API Overview
 
 ### Students
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/students` | Create a student |
-| GET | `/api/students` | List students |
-| GET | `/api/students/{id}` | Get a student |
-| PUT | `/api/students/{id}` | Update a student |
+| Method | Endpoint             | Description      |
+| ------ | -------------------- | ---------------- |
+| POST   | `/api/students`      | Create a student |
+| GET    | `/api/students`      | List students    |
+| GET    | `/api/students/{id}` | Get a student    |
+| PUT    | `/api/students/{id}` | Update a student |
 | DELETE | `/api/students/{id}` | Delete a student |
 
 ### Staff
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/staff` | Create a staff member |
-| GET | `/api/staff` | List staff |
-| GET | `/api/staff/{id}` | Get a staff member |
-| PUT | `/api/staff/{id}` | Update a staff member |
+| Method | Endpoint          | Description           |
+| ------ | ----------------- | --------------------- |
+| POST   | `/api/staff`      | Create a staff member |
+| GET    | `/api/staff`      | List staff            |
+| GET    | `/api/staff/{id}` | Get a staff member    |
+| PUT    | `/api/staff/{id}` | Update a staff member |
 | DELETE | `/api/staff/{id}` | Delete a staff member |
 
 ### Classrooms
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/classrooms` | Create a classroom |
-| GET | `/api/classrooms` | List classrooms |
-| GET | `/api/classrooms/{id}` | Get a classroom |
-| PUT | `/api/classrooms/{id}` | Update a classroom |
+| Method | Endpoint               | Description        |
+| ------ | ---------------------- | ------------------ |
+| POST   | `/api/classrooms`      | Create a classroom |
+| GET    | `/api/classrooms`      | List classrooms    |
+| GET    | `/api/classrooms/{id}` | Get a classroom    |
+| PUT    | `/api/classrooms/{id}` | Update a classroom |
 | DELETE | `/api/classrooms/{id}` | Delete a classroom |
 
 ### Classroom Relationships
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/classrooms/{classroomId}/students/{studentId}` | Enroll a student |
-| GET | `/api/classrooms/{classroomId}/students` | List classroom students |
-| DELETE | `/api/classrooms/{classroomId}/students/{studentId}` | Remove a student |
-| POST | `/api/classrooms/{classroomId}/staff/{staffId}` | Assign staff |
-| GET | `/api/classrooms/{classroomId}/staff` | List classroom staff |
-| DELETE | `/api/classrooms/{classroomId}/staff/{staffId}` | Remove staff |
+| Method | Endpoint                                             | Description             |
+| ------ | ---------------------------------------------------- | ----------------------- |
+| POST   | `/api/classrooms/{classroomId}/students/{studentId}` | Enroll a student        |
+| GET    | `/api/classrooms/{classroomId}/students`             | List classroom students |
+| DELETE | `/api/classrooms/{classroomId}/students/{studentId}` | Remove a student        |
+| POST   | `/api/classrooms/{classroomId}/staff/{staffId}`      | Assign staff            |
+| GET    | `/api/classrooms/{classroomId}/staff`                | List classroom staff    |
+| DELETE | `/api/classrooms/{classroomId}/staff/{staffId}`      | Remove staff            |
 
 ### Guardians
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/guardians` | Create a guardian |
-| GET | `/api/guardians` | List guardians |
-| GET | `/api/guardians/{id}` | Get a guardian |
-| PUT | `/api/guardians/{id}` | Update a guardian |
+| Method | Endpoint              | Description       |
+| ------ | --------------------- | ----------------- |
+| POST   | `/api/guardians`      | Create a guardian |
+| GET    | `/api/guardians`      | List guardians    |
+| GET    | `/api/guardians/{id}` | Get a guardian    |
+| PUT    | `/api/guardians/{id}` | Update a guardian |
 | DELETE | `/api/guardians/{id}` | Delete a guardian |
 
 ### Student Guardian Relationships
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/students/{studentId}/guardians/{guardianId}` | Link a guardian to a student |
-| GET | `/api/students/{studentId}/guardians` | List a student's guardians |
-| GET | `/api/guardians/{guardianId}/students` | List a guardian's students |
-| PUT | `/api/students/{studentId}/guardians/{guardianId}` | Update the relationship |
-| DELETE | `/api/students/{studentId}/guardians/{guardianId}` | Remove the relationship |
+| Method | Endpoint                                           | Description                  |
+| ------ | -------------------------------------------------- | ---------------------------- |
+| POST   | `/api/students/{studentId}/guardians/{guardianId}` | Link a guardian to a student |
+| GET    | `/api/students/{studentId}/guardians`              | List a student's guardians   |
+| GET    | `/api/guardians/{guardianId}/students`             | List a guardian's students   |
+| PUT    | `/api/students/{studentId}/guardians/{guardianId}` | Update the relationship      |
+| DELETE | `/api/students/{studentId}/guardians/{guardianId}` | Remove the relationship      |
 
 ### Student Meals
 
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/students/{studentId}/meals` | Create a daily meal record |
-| GET | `/api/students/{studentId}/meals` | List a student's meal records |
-| GET | `/api/students/{studentId}/meals/{recordDate}` | Get a meal record by date |
-| PUT | `/api/students/{studentId}/meals/{recordDate}` | Update a meal record |
-| DELETE | `/api/students/{studentId}/meals/{recordDate}` | Delete a meal record |
+| Method | Endpoint                                       | Description                   |
+| ------ | ---------------------------------------------- | ----------------------------- |
+| POST   | `/api/students/{studentId}/meals`              | Create a daily meal record    |
+| GET    | `/api/students/{studentId}/meals`              | List a student's meal records |
+| GET    | `/api/students/{studentId}/meals/{recordDate}` | Get a meal record by date     |
+| PUT    | `/api/students/{studentId}/meals/{recordDate}` | Update a meal record          |
+| DELETE | `/api/students/{studentId}/meals/{recordDate}` | Delete a meal record          |
+
+### Student Allergies
+
+| Method | Endpoint                                          | Description                |
+| ------ | ------------------------------------------------- | -------------------------- |
+| POST   | `/api/students/{studentId}/allergies`             | Add a student allergy      |
+| GET    | `/api/students/{studentId}/allergies`             | List a student's allergies |
+| GET    | `/api/students/{studentId}/allergies/{allergyId}` | Get an allergy             |
+| PUT    | `/api/students/{studentId}/allergies/{allergyId}` | Update an allergy          |
+| DELETE | `/api/students/{studentId}/allergies/{allergyId}` | Delete an allergy          |
 
 ## Database Relationships
 
@@ -184,12 +218,18 @@ Student
 │       ├── is_primary_contact
 │       └── is_emergency_contact
 │
-└── Meal Records
-    └── student_meal_records
-        ├── record_date
-        ├── breakfast_eaten
-        ├── lunch_eaten
-        └── dinner_eaten
+├── Meal Records
+│   └── student_meal_records
+│       ├── record_date
+│       ├── breakfast_eaten
+│       ├── lunch_eaten
+│       └── dinner_eaten
+│
+└── Allergies
+    └── student_allergies
+        ├── allergen
+        ├── severity
+        └── notes
 
 Guardian
 └── Students
@@ -199,6 +239,10 @@ Guardian
 Students and guardians have a many-to-many relationship. A student can have
 multiple guardians, and a guardian can be associated with multiple students.
 
+Each student can have multiple daily meal records and multiple allergy records.
+A meal record belongs to a single student and date, while an allergy record
+belongs to a single student.
+
 ## Project Structure
 
 ```text
@@ -206,10 +250,12 @@ bright-tracker/
 ├── backend/
 │   └── src/main/
 │       ├── kotlin/com/issenur/brighttracker/
+│       │   ├── allergy/
 │       │   ├── assignment/
 │       │   ├── classroom/
 │       │   ├── enrollment/
 │       │   ├── guardian/
+│       │   ├── meal/
 │       │   ├── staff/
 │       │   └── student/
 │       └── resources/
@@ -217,17 +263,6 @@ bright-tracker/
 ├── docker-compose.yml
 └── README.md
 ```
-
-### Student Meal Tracking
-
-- Create daily meal records for students
-- Track breakfast, lunch, and dinner participation
-- View all meal records for a student
-- View a student's meal record by date
-- Update daily meal participation
-- Delete meal records
-- Prevent duplicate meal records for the same student and date
-- Automatically track created and updated timestamps
 
 ## Local Development
 
