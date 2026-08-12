@@ -33,7 +33,13 @@ dependencies {
 	runtimeOnly("org.postgresql:postgresql")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
+	testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
 	testImplementation("org.jetbrains.kotlin:kotlin-test-junit5")
+
+	testImplementation("org.testcontainers:testcontainers:2.0.5")
+	testImplementation("org.testcontainers:testcontainers-junit-jupiter:2.0.5")
+	testImplementation("org.testcontainers:testcontainers-postgresql:2.0.5")
+
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 

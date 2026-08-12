@@ -119,6 +119,26 @@ meals, allergies, and other school operations.
 - Prevent duplicate allergens for the same student
 - Treat allergen names as case-insensitive for duplicate detection
 
+## Testing
+
+The backend includes integration tests for the Student API using:
+
+- JUnit 5
+- Spring Boot Test
+- MockMvc
+- Testcontainers
+- PostgreSQL 16
+
+The integration tests run against an isolated PostgreSQL container and verify:
+
+- Creating a student
+- Retrieving all students
+- Retrieving a student by ID
+- Updating a student
+- Deleting a student
+- `404 Not Found` handling
+- Request validation
+
 ## API Overview
 
 ### Students
@@ -284,5 +304,10 @@ Run the full build:
 ```bash
 ./gradlew clean build
 ```
+
+Run the test suite from the `backend` directory:
+
+```bash
+./gradlew test
 
 The backend API runs locally on port `8080`.
