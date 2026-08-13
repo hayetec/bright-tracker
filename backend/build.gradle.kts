@@ -5,6 +5,8 @@ plugins {
 
 	id("org.springframework.boot") version "4.1.0"
 	id("io.spring.dependency-management") version "1.1.7"
+
+	jacoco
 }
 
 group = "com.issenur"
@@ -51,4 +53,18 @@ kotlin {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+}
+
+tasks.test {
+	finalizedBy(tasks.jacocoTestReport)
+}
+
+tasks.jacocoTestReport {
+	dependsOn(tasks.test)
+
+	reports {
+		html.required.set(true)
+		xml.required.set(true)
+		csv.required.set(false)
+	}
 }
