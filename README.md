@@ -129,15 +129,28 @@ The backend includes integration tests for the Student API using:
 - Testcontainers
 - PostgreSQL 16
 
-The integration tests run against an isolated PostgreSQL container and verify:
+Current integration test coverage includes:
 
-- Creating a student
-- Retrieving all students
-- Retrieving a student by ID
-- Updating a student
-- Deleting a student
-- `404 Not Found` handling
-- Request validation
+**Student API**
+- Create a student
+- Retrieve all students
+- Retrieve a student by ID
+- Update a student
+- Delete a student
+- Validate invalid requests
+- Handle missing students with `404 Not Found`
+
+**Staff API**
+- Create a staff member
+- Retrieve all staff members
+- Retrieve a staff member by ID
+- Update a staff member
+- Delete a staff member
+- Validate invalid requests
+- Handle missing staff members with `404 Not Found`
+
+Integration tests use Testcontainers to start an isolated PostgreSQL 16
+database. Flyway migrations are automatically applied before the tests run.
 
 ## API Overview
 
@@ -292,22 +305,54 @@ Start PostgreSQL:
 docker compose up -d
 ```
 
-Run the backend:
+Start the backend:
 
 ```bash
 cd backend
 ./gradlew bootRun
 ```
 
-Run the full build:
+The backend API runs locally on port `8080`.
+
+## Testing & Coverage
+
+Integration tests use JUnit 5, Spring Boot Test, MockMvc, Testcontainers,
+and PostgreSQL 16. Testcontainers provides an isolated PostgreSQL database,
+and Flyway applies the database migrations before the tests run.
+
+Current integration tests cover the Student and Staff APIs, including CRUD
+operations, request validation, and `404 Not Found` handling.
+
+### Run Tests
+
+From the `backend` directory:
+
+```bash
+./gradlew test
+```
+
+Test report:
+
+```text
+build/reports/tests/test/index.html
+```
+
+### Generate Code Coverage
+
+JaCoCo is used to generate backend code coverage reports.
+
+```bash
+./gradlew clean test jacocoTestReport
+```
+
+JaCoCo coverage report:
+
+```text
+build/reports/jacoco/test/html/index.html
+```
+
+### Run Full Build
 
 ```bash
 ./gradlew clean build
 ```
-
-Run the test suite from the `backend` directory:
-
-```bash
-./gradlew test
-
-The backend API runs locally on port `8080`.
