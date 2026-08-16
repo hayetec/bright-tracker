@@ -151,6 +151,16 @@ Current integration test coverage includes:
 * Validate invalid requests
 * Handle missing staff members with `404 Not Found`
 
+**Classroom API**
+
+* Create a classroom
+* Retrieve all classrooms
+* Retrieve a classroom by ID
+* Update a classroom
+* Delete a classroom
+* Validate invalid requests
+* Handle missing classrooms with `404 Not Found`
+
 **Student Enrollment API**
 
 * Enroll a student in a classroom
