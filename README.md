@@ -121,36 +121,49 @@ meals, allergies, and other school operations.
 
 ## Testing
 
-The backend includes integration tests for the Student API using:
+The backend includes integration tests using:
 
-- JUnit 5
-- Spring Boot Test
-- MockMvc
-- Testcontainers
-- PostgreSQL 16
+* JUnit 5
+* Spring Boot Test
+* MockMvc
+* Testcontainers
+* PostgreSQL 16
 
 Current integration test coverage includes:
 
 **Student API**
-- Create a student
-- Retrieve all students
-- Retrieve a student by ID
-- Update a student
-- Delete a student
-- Validate invalid requests
-- Handle missing students with `404 Not Found`
+
+* Create a student
+* Retrieve all students
+* Retrieve a student by ID
+* Update a student
+* Delete a student
+* Validate invalid requests
+* Handle missing students with `404 Not Found`
 
 **Staff API**
-- Create a staff member
-- Retrieve all staff members
-- Retrieve a staff member by ID
-- Update a staff member
-- Delete a staff member
-- Validate invalid requests
-- Handle missing staff members with `404 Not Found`
+
+* Create a staff member
+* Retrieve all staff members
+* Retrieve a staff member by ID
+* Update a staff member
+* Delete a staff member
+* Validate invalid requests
+* Handle missing staff members with `404 Not Found`
+
+**Student Enrollment API**
+
+* Enroll a student in a classroom
+* Retrieve classroom enrollments
+* Remove a student from a classroom
+* Reject duplicate enrollments with `409 Conflict`
+* Handle missing students with `404 Not Found`
+* Handle missing classrooms with `404 Not Found`
+* Handle missing enrollments with `404 Not Found`
 
 Integration tests use Testcontainers to start an isolated PostgreSQL 16
 database. Flyway migrations are automatically applied before the tests run.
+
 
 ## API Overview
 
