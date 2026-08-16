@@ -31,6 +31,7 @@ class StaffAssignmentExceptionHandler {
     fun handleInvalidRole(
         exception: InvalidClassroomStaffRoleException
     ): Map<String, String> =
-        mapOf("message" to exception.message.orEmpty()
+        mapOf(
+            "message" to exception.message.orEmpty()
         )
 }

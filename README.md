@@ -171,6 +171,17 @@ Current integration test coverage includes:
 * Handle missing classrooms with `404 Not Found`
 * Handle missing enrollments with `404 Not Found`
 
+**Classroom Staff Assignment API**
+
+* Assign a teacher or teacher aide to a classroom
+* Retrieve staff assigned to a classroom
+* Remove a staff assignment
+* Reject duplicate assignments with `409 Conflict`
+* Reject invalid staff roles with `400 Bad Request`
+* Handle missing classrooms with `404 Not Found`
+* Handle missing staff members with `404 Not Found`
+* Handle missing assignments with `404 Not Found`
+
 Integration tests use Testcontainers to start an isolated PostgreSQL 16
 database. Flyway migrations are automatically applied before the tests run.
 
