@@ -1,5 +1,6 @@
 package com.issenur.brighttracker.guardian
 
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 
@@ -12,7 +13,7 @@ class GuardianController(
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun create(
-        @RequestBody request: GuardianRequest
+        @Valid @RequestBody request: GuardianRequest
     ): GuardianResponse =
         guardianService.create(request)
 
@@ -29,7 +30,7 @@ class GuardianController(
     @PutMapping("/{id}")
     fun update(
         @PathVariable id: Long,
-        @RequestBody request: GuardianRequest
+        @Valid @RequestBody request: GuardianRequest
     ): GuardianResponse =
         guardianService.update(id, request)
 

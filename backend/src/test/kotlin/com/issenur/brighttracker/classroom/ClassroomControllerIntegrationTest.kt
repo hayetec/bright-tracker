@@ -142,17 +142,30 @@ class ClassroomControllerIntegrationTest {
         mockMvc.post("/api/classrooms") {
             contentType = MediaType.APPLICATION_JSON
             content = """
-                {
-                  "name": "",
-                  "gradeLevel": "",
-                  "roomNumber": "101",
-                  "capacity": 20,
-                  "status": "ACTIVE"
-                }
-            """.trimIndent()
+            {
+              "name": "",
+              "gradeLevel": "",
+              "roomNumber": "101",
+              "capacity": 0,
+              "status": "ACTIVE"
+            }
+        """.trimIndent()
         }
             .andExpect {
                 status { isBadRequest() }
+                jsonPath("$.status") { value(400) }
+                jsonPath("$.error") { value("Bad Request") }
+                jsonPath("$.message") { value("Validation failed") }
+                jsonPath("$.path") { value("/api/classrooms") }
+                jsonPath("$.details.name") {
+                    value("must not be blank")
+                }
+                jsonPath("$.details.gradeLevel") {
+                    value("must not be blank")
+                }
+                jsonPath("$.details.capacity") {
+                    value("must be greater than or equal to 1")
+                }
             }
     }
 
