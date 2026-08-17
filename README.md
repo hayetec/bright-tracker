@@ -214,6 +214,20 @@ Current integration test coverage includes:
 * Handle missing students with `404 Not Found`
 * Handle missing meal records with `404 Not Found`
 
+**Student Allergy API**
+
+* Create a student allergy
+* Retrieve all allergies for a student
+* Retrieve an allergy by ID
+* Update a student allergy
+* Delete a student allergy
+* Reject duplicate allergens with `409 Conflict`
+* Handle duplicate allergens case-insensitively
+* Trim allergen names before saving
+* Prevent updates that duplicate another allergy
+* Handle missing students with `404 Not Found`
+* Handle missing allergies with `404 Not Found`
+
 Integration tests use Testcontainers to start an isolated PostgreSQL 16
 database. Flyway migrations are automatically applied before the tests run.
 
