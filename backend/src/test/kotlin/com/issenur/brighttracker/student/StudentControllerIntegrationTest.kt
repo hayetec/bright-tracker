@@ -99,9 +99,22 @@ class StudentControllerIntegrationTest {
         }
             .andExpect {
                 status { isBadRequest() }
+                jsonPath("$.status") { value(400) }
+                jsonPath("$.error") { value("Bad Request") }
+                jsonPath("$.message") { value("Validation failed") }
+                jsonPath("$.path") { value("/api/students") }
+                jsonPath("$.details.firstName") {
+                    value("must not be blank")
+                }
+                jsonPath("$.details.lastName") {
+                    value("must not be blank")
+                }
+                jsonPath("$.details.gradeLevel") {
+                    value("must not be blank")
+                }
             }
     }
-
+    
     private fun createStudent(): Long {
         val result = mockMvc.post("/api/students") {
             contentType = MediaType.APPLICATION_JSON

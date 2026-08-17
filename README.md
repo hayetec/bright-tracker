@@ -228,9 +228,17 @@ Current integration test coverage includes:
 * Handle missing students with `404 Not Found`
 * Handle missing allergies with `404 Not Found`
 
+### API Validation and Error Handling
+
+* Added Bean Validation for Student, Staff, Classroom, Guardian, and Allergy requests
+* Added validation for required fields, field lengths, email format, and numeric constraints
+* Added standardized API error responses
+* Added field-level validation error details
+* Added consistent `400 Bad Request` responses for invalid requests
+* Added integration test coverage for validation error responses
+
 Integration tests use Testcontainers to start an isolated PostgreSQL 16
 database. Flyway migrations are automatically applied before the tests run.
-
 
 ## API Overview
 

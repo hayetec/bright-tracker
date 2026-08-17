@@ -139,21 +139,34 @@ class StaffControllerIntegrationTest {
         mockMvc.post("/api/staff") {
             contentType = MediaType.APPLICATION_JSON
             content = """
-                {
-                  "firstName": "",
-                  "lastName": "",
-                  "email": "",
-                  "phoneNumber": "",
-                  "role": "TEACHER",
-                  "status": "ACTIVE"
-                }
-            """.trimIndent()
+            {
+              "firstName": "",
+              "lastName": "",
+              "email": "not-an-email",
+              "phoneNumber": "",
+              "role": "TEACHER",
+              "status": "ACTIVE"
+            }
+        """.trimIndent()
         }
             .andExpect {
                 status { isBadRequest() }
+                jsonPath("$.status") { value(400) }
+                jsonPath("$.error") { value("Bad Request") }
+                jsonPath("$.message") { value("Validation failed") }
+                jsonPath("$.path") { value("/api/staff") }
+                jsonPath("$.details.firstName") {
+                    value("must not be blank")
+                }
+                jsonPath("$.details.lastName") {
+                    value("must not be blank")
+                }
+                jsonPath("$.details.email") {
+                    value("must be a well-formed email address")
+                }
             }
     }
-
+    
     private fun createStaffMember(): Long {
         val result = mockMvc.post("/api/staff") {
             contentType = MediaType.APPLICATION_JSON

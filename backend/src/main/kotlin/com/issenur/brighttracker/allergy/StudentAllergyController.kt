@@ -1,5 +1,6 @@
 package com.issenur.brighttracker.allergy
 
+import jakarta.validation.Valid
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 
@@ -13,7 +14,7 @@ class StudentAllergyController(
     @ResponseStatus(HttpStatus.CREATED)
     fun create(
         @PathVariable studentId: Long,
-        @RequestBody request: StudentAllergyCreateRequest
+        @Valid @RequestBody request: StudentAllergyCreateRequest
     ): StudentAllergyResponse =
         allergyService.create(
             studentId,
@@ -40,7 +41,7 @@ class StudentAllergyController(
     fun update(
         @PathVariable studentId: Long,
         @PathVariable allergyId: Long,
-        @RequestBody request: StudentAllergyUpdateRequest
+        @Valid @RequestBody request: StudentAllergyUpdateRequest
     ): StudentAllergyResponse =
         allergyService.update(
             studentId,
