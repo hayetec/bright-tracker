@@ -203,6 +203,17 @@ Current integration test coverage includes:
 * Handle missing guardians with `404 Not Found`
 * Handle missing relationships with `404 Not Found`
 
+**Student Meal API**
+
+* Create a student meal record
+* Retrieve all meal records for a student
+* Retrieve a meal record by date
+* Update a meal record
+* Delete a meal record
+* Reject duplicate meal records with `409 Conflict`
+* Handle missing students with `404 Not Found`
+* Handle missing meal records with `404 Not Found`
+
 Integration tests use Testcontainers to start an isolated PostgreSQL 16
 database. Flyway migrations are automatically applied before the tests run.
 
