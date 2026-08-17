@@ -182,6 +182,27 @@ Current integration test coverage includes:
 * Handle missing staff members with `404 Not Found`
 * Handle missing assignments with `404 Not Found`
 
+**Guardian API**
+
+* Create a guardian
+* Retrieve all guardians
+* Retrieve a guardian by ID
+* Update a guardian
+* Delete a guardian
+* Handle missing guardians with `404 Not Found`
+
+**Student Guardian API**
+
+* Link a guardian to a student
+* Retrieve guardians for a student
+* Retrieve students for a guardian
+* Update a student-guardian relationship
+* Remove a student-guardian relationship
+* Reject duplicate relationships with `409 Conflict`
+* Handle missing students with `404 Not Found`
+* Handle missing guardians with `404 Not Found`
+* Handle missing relationships with `404 Not Found`
+
 Integration tests use Testcontainers to start an isolated PostgreSQL 16
 database. Flyway migrations are automatically applied before the tests run.
 
