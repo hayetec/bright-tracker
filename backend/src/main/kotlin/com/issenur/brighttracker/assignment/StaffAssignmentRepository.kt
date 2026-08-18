@@ -2,17 +2,17 @@ package com.issenur.brighttracker.assignment
 
 import org.springframework.data.jpa.repository.JpaRepository
 
-interface ClassroomStaffAssignmentRepository :
-    JpaRepository<ClassroomStaffAssignment, Long> {
+interface StaffAssignmentRepository :
+    JpaRepository<StaffAssignment, Long> {
 
     fun findAllByClassroomId(
         classroomId: Long
-    ): List<ClassroomStaffAssignment>
+    ): List<StaffAssignment>
 
     fun findByClassroomIdAndStaffId(
         classroomId: Long,
         staffId: Long
-    ): ClassroomStaffAssignment?
+    ): StaffAssignment?
 
     fun existsByClassroomIdAndStaffId(
         classroomId: Long,

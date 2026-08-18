@@ -1,6 +1,6 @@
 package com.issenur.brighttracker.assignment
 
-class StaffAssignmentNotFoundException(
+class AssignmentNotFoundException(
     staffId: Long,
     classroomId: Long
 ) : RuntimeException(

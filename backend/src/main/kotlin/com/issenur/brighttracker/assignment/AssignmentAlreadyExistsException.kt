@@ -1,6 +1,6 @@
 package com.issenur.brighttracker.assignment
 
-class StaffAssignmentAlreadyExistsException(
+class AssignmentAlreadyExistsException(
     staffId: Long,
     classroomId: Long
 ) : RuntimeException(

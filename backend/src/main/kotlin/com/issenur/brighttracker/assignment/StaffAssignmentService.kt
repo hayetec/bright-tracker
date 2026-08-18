@@ -9,8 +9,8 @@ import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
-class ClassroomStaffAssignmentService(
-    private val assignmentRepository: ClassroomStaffAssignmentRepository,
+class StaffAssignmentService(
+    private val assignmentRepository: StaffAssignmentRepository,
     private val classroomRepository: ClassroomRepository,
     private val staffRepository: StaffRepository
 ) {
@@ -19,7 +19,7 @@ class ClassroomStaffAssignmentService(
     fun assign(
         classroomId: Long,
         staffId: Long
-    ): ClassroomStaffAssignmentResponse {
+    ): StaffAssignmentResponse {
 
         if (!classroomRepository.existsById(classroomId)) {
             throw ClassroomNotFoundException(classroomId)
@@ -32,7 +32,7 @@ class ClassroomStaffAssignmentService(
             staff.role != StaffRole.TEACHER &&
             staff.role != StaffRole.TEACHER_AIDE
         ) {
-            throw InvalidClassroomStaffRoleException(staffId)
+            throw AssignmentInvalidRoleException(staffId)
         }
 
         if (
@@ -41,13 +41,13 @@ class ClassroomStaffAssignmentService(
                 staffId
             )
         ) {
-            throw StaffAssignmentAlreadyExistsException(
+            throw AssignmentAlreadyExistsException(
                 staffId,
                 classroomId
             )
         }
 
-        val assignment = ClassroomStaffAssignment(
+        val assignment = StaffAssignment(
             classroomId = classroomId,
             staffId = staffId
         )
@@ -60,7 +60,7 @@ class ClassroomStaffAssignmentService(
     @Transactional(readOnly = true)
     fun findByClassroom(
         classroomId: Long
-    ): List<ClassroomStaffAssignmentResponse> {
+    ): List<StaffAssignmentResponse> {
 
         if (!classroomRepository.existsById(classroomId)) {
             throw ClassroomNotFoundException(classroomId)
@@ -81,7 +81,7 @@ class ClassroomStaffAssignmentService(
                 classroomId,
                 staffId
             )
-                ?: throw StaffAssignmentNotFoundException(
+                ?: throw AssignmentNotFoundException(
                     staffId,
                     classroomId
                 )
@@ -89,8 +89,8 @@ class ClassroomStaffAssignmentService(
         assignmentRepository.delete(assignment)
     }
 
-    private fun ClassroomStaffAssignment.toResponse() =
-        ClassroomStaffAssignmentResponse(
+    private fun StaffAssignment.toResponse() =
+        StaffAssignmentResponse(
             id = requireNotNull(id),
             classroomId = classroomId,
             staffId = staffId,

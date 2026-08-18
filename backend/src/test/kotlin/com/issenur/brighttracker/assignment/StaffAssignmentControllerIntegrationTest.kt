@@ -18,7 +18,7 @@ import org.testcontainers.junit.jupiter.Testcontainers
 @SpringBootTest
 @AutoConfigureMockMvc
 @Testcontainers
-class ClassroomStaffAssignmentControllerIntegrationTest {
+class StaffAssignmentControllerIntegrationTest {
 
     @Autowired
     lateinit var mockMvc: MockMvc
