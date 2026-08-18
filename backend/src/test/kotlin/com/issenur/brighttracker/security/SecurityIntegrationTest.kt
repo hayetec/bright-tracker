@@ -110,9 +110,18 @@ class SecurityIntegrationTest {
     fun `allows admin to write`() {
         mockMvc.post("/api/students") {
             with(
-                jwt().authorities(
-                    SimpleGrantedAuthority("ROLE_ADMIN")
-                )
+                jwt()
+                    .jwt { jwt ->
+                        jwt
+                            .subject("test-admin-subject")
+                            .claim(
+                                "preferred_username",
+                                "test-admin"
+                            )
+                    }
+                    .authorities(
+                        SimpleGrantedAuthority("ROLE_ADMIN")
+                    )
             )
 
             contentType = MediaType.APPLICATION_JSON

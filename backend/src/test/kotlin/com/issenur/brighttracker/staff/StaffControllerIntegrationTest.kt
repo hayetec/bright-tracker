@@ -1,5 +1,9 @@
 package com.issenur.brighttracker.staff
 
+import com.issenur.brighttracker.audit.AuditAction
+import com.issenur.brighttracker.audit.AuditLogRepository
+import com.issenur.brighttracker.audit.AuditResourceType
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -35,6 +39,9 @@ class StaffControllerIntegrationTest {
     lateinit var webApplicationContext: WebApplicationContext
 
     @Autowired
+    lateinit var auditLogRepository: AuditLogRepository
+
+    @Autowired
     lateinit var mockMvc: MockMvc
 
     @BeforeEach
@@ -44,9 +51,15 @@ class StaffControllerIntegrationTest {
             .defaultRequest<DefaultMockMvcBuilder>(
                 MockMvcRequestBuilders.get("/")
                     .with(
-                        jwt().authorities(
-                            SimpleGrantedAuthority("ROLE_ADMIN")
-                        )
+                        jwt()
+                            .jwt { jwt ->
+                                jwt
+                                    .subject("test-admin-subject")
+                                    .claim("preferred_username", "test-admin")
+                            }
+                            .authorities(
+                                SimpleGrantedAuthority("ROLE_ADMIN")
+                            )
                     )
             )
             .apply<DefaultMockMvcBuilder>(springSecurity())
@@ -197,13 +210,16 @@ class StaffControllerIntegrationTest {
     }
     
     private fun createStaffMember(): Long {
+        val uniqueEmail =
+            "hassan-${System.nanoTime()}@example.com"
+
         val result = mockMvc.post("/api/staff") {
             contentType = MediaType.APPLICATION_JSON
             content = """
                 {
                   "firstName": "Hassan",
                   "lastName": "Ali",
-                  "email": "hassan@example.com",
+                  "email": "$uniqueEmail",
                   "phoneNumber": "6125551234",
                   "role": "TEACHER",
                   "status": "ACTIVE"
@@ -222,4 +238,105 @@ class StaffControllerIntegrationTest {
             ?.toLong()
             ?: error("Staff ID was not returned")
     }
+
+    @Test
+    fun `creates audit log when staff is created`() {
+        val uniqueEmail =
+            "hassan-${System.nanoTime()}@example.com"
+
+        val result = mockMvc.post("/api/staff") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """
+            {
+              "firstName": "Audit",
+              "lastName": "Staff",
+              "email": "$uniqueEmail",
+              "phoneNumber": "6125551234",
+              "role": "TEACHER",
+              "status": "ACTIVE"
+            }
+        """.trimIndent()
+        }
+            .andExpect {
+                status { isCreated() }
+            }
+            .andReturn()
+
+        val staffId = extractId(result.response.contentAsString)
+
+        val auditLog = auditLogRepository.findAll()
+            .last()
+
+        assertEquals(AuditAction.CREATE, auditLog.action)
+        assertEquals(AuditResourceType.STAFF, auditLog.resourceType)
+        assertEquals(staffId, auditLog.resourceId)
+        assertEquals("test-admin-subject", auditLog.actorSubject)
+        assertEquals("test-admin", auditLog.actorUsername)
+    }
+
+    @Test
+    fun `creates audit log when staff is updated`() {
+        val uniqueEmail =
+            "hassan-${System.nanoTime()}@example.com"
+
+        val id = createStaffMember()
+
+        mockMvc.put("/api/staff/$id") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """
+            {
+              "firstName": "Audit",
+              "lastName": "Staff",
+              "email": "$uniqueEmail",
+              "phoneNumber": "6125559999",
+              "role": "TEACHER",
+              "status": "ACTIVE"
+            }
+        """.trimIndent()
+        }
+            .andExpect {
+                status { isOk() }
+            }
+
+        val auditLog = auditLogRepository.findAll()
+            .filter {
+                it.resourceType == AuditResourceType.STAFF &&
+                        it.resourceId == id
+            }
+            .last { it.action == AuditAction.UPDATE }
+
+        assertEquals(AuditAction.UPDATE, auditLog.action)
+        assertEquals(AuditResourceType.STAFF, auditLog.resourceType)
+        assertEquals(id, auditLog.resourceId)
+        assertEquals("test-admin-subject", auditLog.actorSubject)
+        assertEquals("test-admin", auditLog.actorUsername)
+    }
+
+    @Test
+    fun `creates audit log when staff is deleted`() {
+        val id = createStaffMember()
+
+        mockMvc.delete("/api/staff/$id")
+            .andExpect {
+                status { isNoContent() }
+            }
+
+        val auditLog = auditLogRepository.findAll().last()
+
+        assertEquals(AuditAction.DELETE, auditLog.action)
+        assertEquals(AuditResourceType.STAFF, auditLog.resourceType)
+        assertEquals(id, auditLog.resourceId)
+        assertEquals("test-admin-subject", auditLog.actorSubject)
+        assertEquals("test-admin", auditLog.actorUsername)
+    }
+
+
+
+    private fun extractId(response: String): Long =
+        Regex(""""id":(\d+)""")
+            .find(response)
+            ?.groupValues
+            ?.get(1)
+            ?.toLong()
+            ?: error("ID was not returned")
 }

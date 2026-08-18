@@ -1,5 +1,9 @@
 package com.issenur.brighttracker.enrollment
 
+import com.issenur.brighttracker.audit.AuditAction
+import com.issenur.brighttracker.audit.AuditLogRepository
+import com.issenur.brighttracker.audit.AuditResourceType
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -34,6 +38,9 @@ class StudentEnrollmentControllerIntegrationTest {
     lateinit var webApplicationContext: WebApplicationContext
 
     @Autowired
+    lateinit var auditLogRepository: AuditLogRepository
+
+    @Autowired
     lateinit var mockMvc: MockMvc
 
     @BeforeEach
@@ -43,9 +50,18 @@ class StudentEnrollmentControllerIntegrationTest {
             .defaultRequest<DefaultMockMvcBuilder>(
                 MockMvcRequestBuilders.get("/")
                     .with(
-                        jwt().authorities(
-                            SimpleGrantedAuthority("ROLE_ADMIN")
-                        )
+                        jwt()
+                            .jwt { jwt ->
+                                jwt
+                                    .subject("test-admin-subject")
+                                    .claim(
+                                        "preferred_username",
+                                        "test-admin"
+                                    )
+                            }
+                            .authorities(
+                                SimpleGrantedAuthority("ROLE_ADMIN")
+                            )
                     )
             )
             .apply<DefaultMockMvcBuilder>(springSecurity())
@@ -236,4 +252,99 @@ class StudentEnrollmentControllerIntegrationTest {
             ?.toLong()
             ?: error("Classroom ID was not returned")
     }
+
+    @Test
+    fun `creates audit log when student is enrolled`() {
+        val studentId = createStudent()
+        val classroomId = createClassroom()
+
+        val result = mockMvc.post(
+            "/api/classrooms/$classroomId/students/$studentId"
+        )
+            .andExpect {
+                status { isCreated() }
+            }
+            .andReturn()
+
+        val enrollmentId =
+            extractId(result.response.contentAsString)
+
+        val auditLog = auditLogRepository.findAll()
+            .filter {
+                it.resourceType ==
+                        AuditResourceType.STUDENT_ENROLLMENT &&
+                        it.resourceId == enrollmentId
+            }
+            .last { it.action == AuditAction.ASSIGN }
+
+        assertEquals(AuditAction.ASSIGN, auditLog.action)
+        assertEquals(
+            AuditResourceType.STUDENT_ENROLLMENT,
+            auditLog.resourceType
+        )
+        assertEquals(enrollmentId, auditLog.resourceId)
+        assertEquals(
+            "test-admin-subject",
+            auditLog.actorSubject
+        )
+        assertEquals(
+            "test-admin",
+            auditLog.actorUsername
+        )
+    }
+
+    @Test
+    fun `creates audit log when student enrollment is removed`() {
+        val studentId = createStudent()
+        val classroomId = createClassroom()
+
+        val result = mockMvc.post(
+            "/api/classrooms/$classroomId/students/$studentId"
+        )
+            .andExpect {
+                status { isCreated() }
+            }
+            .andReturn()
+
+        val enrollmentId =
+            extractId(result.response.contentAsString)
+
+        mockMvc.delete(
+            "/api/classrooms/$classroomId/students/$studentId"
+        )
+            .andExpect {
+                status { isNoContent() }
+            }
+
+        val auditLog = auditLogRepository.findAll()
+            .filter {
+                it.resourceType ==
+                        AuditResourceType.STUDENT_ENROLLMENT &&
+                        it.resourceId == enrollmentId
+            }
+            .last { it.action == AuditAction.REMOVE }
+
+        assertEquals(AuditAction.REMOVE, auditLog.action)
+        assertEquals(
+            AuditResourceType.STUDENT_ENROLLMENT,
+            auditLog.resourceType
+        )
+        assertEquals(enrollmentId, auditLog.resourceId)
+        assertEquals(
+            "test-admin-subject",
+            auditLog.actorSubject
+        )
+        assertEquals(
+            "test-admin",
+            auditLog.actorUsername
+        )
+    }
+
+    private fun extractId(response: String): Long =
+        Regex(""""id":(\d+)""")
+            .find(response)
+            ?.groupValues
+            ?.get(1)
+            ?.toLong()
+            ?: error("ID was not returned")
 }

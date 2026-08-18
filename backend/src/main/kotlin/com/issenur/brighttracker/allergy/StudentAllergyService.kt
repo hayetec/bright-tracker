@@ -1,5 +1,8 @@
 package com.issenur.brighttracker.allergy
 
+import com.issenur.brighttracker.audit.AuditAction
+import com.issenur.brighttracker.audit.AuditResourceType
+import com.issenur.brighttracker.audit.AuditService
 import com.issenur.brighttracker.student.StudentNotFoundException
 import com.issenur.brighttracker.student.StudentRepository
 import org.springframework.stereotype.Service
@@ -8,7 +11,8 @@ import org.springframework.transaction.annotation.Transactional
 @Service
 class StudentAllergyService(
     private val allergyRepository: StudentAllergyRepository,
-    private val studentRepository: StudentRepository
+    private val studentRepository: StudentRepository,
+    private val auditService: AuditService,
 ) {
 
     @Transactional
@@ -42,9 +46,15 @@ class StudentAllergyService(
             notes = request.notes
         )
 
-        return allergyRepository
-            .save(allergy)
-            .toResponse()
+        val savedAllergy = allergyRepository.save(allergy)
+
+        auditService.record(
+            action = AuditAction.CREATE,
+            resourceType = AuditResourceType.STUDENT_ALLERGY,
+            resourceId = savedAllergy.id,
+        )
+
+        return savedAllergy.toResponse()
     }
 
     @Transactional(readOnly = true)
@@ -101,9 +111,15 @@ class StudentAllergyService(
         allergy.severity = request.severity
         allergy.notes = request.notes
 
-        return allergyRepository
-            .save(allergy)
-            .toResponse()
+        val savedAllergy = allergyRepository.save(allergy)
+
+        auditService.record(
+            action = AuditAction.UPDATE,
+            resourceType = AuditResourceType.STUDENT_ALLERGY,
+            resourceId = savedAllergy.id,
+        )
+
+        return savedAllergy.toResponse()
     }
 
     @Transactional
@@ -113,6 +129,12 @@ class StudentAllergyService(
     ) {
         allergyRepository.delete(
             findAllergy(studentId, allergyId)
+        )
+
+        auditService.record(
+            action = AuditAction.DELETE,
+            resourceType = AuditResourceType.STUDENT_ALLERGY,
+            resourceId = allergyId,
         )
     }
 

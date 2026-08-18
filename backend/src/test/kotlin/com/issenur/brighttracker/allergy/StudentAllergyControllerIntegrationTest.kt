@@ -1,5 +1,9 @@
 package com.issenur.brighttracker.allergy
 
+import com.issenur.brighttracker.audit.AuditAction
+import com.issenur.brighttracker.audit.AuditLogRepository
+import com.issenur.brighttracker.audit.AuditResourceType
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -35,6 +39,9 @@ class StudentAllergyControllerIntegrationTest {
     lateinit var webApplicationContext: WebApplicationContext
 
     @Autowired
+    lateinit var auditLogRepository: AuditLogRepository
+
+    @Autowired
     lateinit var mockMvc: MockMvc
 
     @BeforeEach
@@ -44,9 +51,18 @@ class StudentAllergyControllerIntegrationTest {
             .defaultRequest<DefaultMockMvcBuilder>(
                 MockMvcRequestBuilders.get("/")
                     .with(
-                        jwt().authorities(
-                            SimpleGrantedAuthority("ROLE_ADMIN")
-                        )
+                        jwt()
+                            .jwt { jwt ->
+                                jwt
+                                    .subject("test-admin-subject")
+                                    .claim(
+                                        "preferred_username",
+                                        "test-admin"
+                                    )
+                            }
+                            .authorities(
+                                SimpleGrantedAuthority("ROLE_ADMIN")
+                            )
                     )
             )
             .apply<DefaultMockMvcBuilder>(springSecurity())
@@ -385,4 +401,96 @@ class StudentAllergyControllerIntegrationTest {
             ?.get(1)
             ?.toLong()
             ?: error("ID was not returned")
+
+    @Test
+    fun `creates audit log when student allergy is created`() {
+        val studentId = createStudent()
+
+        val result = mockMvc.post("/api/students/$studentId/allergies") {
+            contentType = MediaType.APPLICATION_JSON
+            content = createRequest(
+                allergen = "Audit Peanuts",
+                severity = "SEVERE",
+                notes = "Audit test"
+            )
+        }
+            .andExpect {
+                status { isCreated() }
+            }
+            .andReturn()
+
+        val allergyId = extractId(result.response.contentAsString)
+
+        val auditLog = auditLogRepository.findAll()
+            .filter {
+                it.resourceType == AuditResourceType.STUDENT_ALLERGY &&
+                        it.resourceId == allergyId
+            }
+            .last { it.action == AuditAction.CREATE }
+
+        assertEquals(AuditAction.CREATE, auditLog.action)
+        assertEquals(AuditResourceType.STUDENT_ALLERGY, auditLog.resourceType)
+        assertEquals(allergyId, auditLog.resourceId)
+        assertEquals("test-admin-subject", auditLog.actorSubject)
+        assertEquals("test-admin", auditLog.actorUsername)
+    }
+
+    @Test
+    fun `creates audit log when student allergy is updated`() {
+        val studentId = createStudent()
+        val allergyId = createAllergy(studentId)
+
+        mockMvc.put(
+            "/api/students/$studentId/allergies/$allergyId"
+        ) {
+            contentType = MediaType.APPLICATION_JSON
+            content = updateRequest(
+                allergen = "Tree Nuts",
+                severity = "MODERATE",
+                notes = "Updated audit test"
+            )
+        }
+            .andExpect {
+                status { isOk() }
+            }
+
+        val auditLog = auditLogRepository.findAll()
+            .filter {
+                it.resourceType == AuditResourceType.STUDENT_ALLERGY &&
+                        it.resourceId == allergyId
+            }
+            .last { it.action == AuditAction.UPDATE }
+
+        assertEquals(AuditAction.UPDATE, auditLog.action)
+        assertEquals(AuditResourceType.STUDENT_ALLERGY, auditLog.resourceType)
+        assertEquals(allergyId, auditLog.resourceId)
+        assertEquals("test-admin-subject", auditLog.actorSubject)
+        assertEquals("test-admin", auditLog.actorUsername)
+    }
+
+    @Test
+    fun `creates audit log when student allergy is deleted`() {
+        val studentId = createStudent()
+        val allergyId = createAllergy(studentId)
+
+        mockMvc.delete(
+            "/api/students/$studentId/allergies/$allergyId"
+        )
+            .andExpect {
+                status { isNoContent() }
+            }
+
+        val auditLog = auditLogRepository.findAll()
+            .filter {
+                it.resourceType == AuditResourceType.STUDENT_ALLERGY &&
+                        it.resourceId == allergyId
+            }
+            .last { it.action == AuditAction.DELETE }
+
+        assertEquals(AuditAction.DELETE, auditLog.action)
+        assertEquals(AuditResourceType.STUDENT_ALLERGY, auditLog.resourceType)
+        assertEquals(allergyId, auditLog.resourceId)
+        assertEquals("test-admin-subject", auditLog.actorSubject)
+        assertEquals("test-admin", auditLog.actorUsername)
+    }
 }

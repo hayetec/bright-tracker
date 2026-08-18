@@ -1,5 +1,9 @@
 package com.issenur.brighttracker.enrollment
 
+
+import com.issenur.brighttracker.audit.AuditAction
+import com.issenur.brighttracker.audit.AuditResourceType
+import com.issenur.brighttracker.audit.AuditService
 import com.issenur.brighttracker.classroom.ClassroomNotFoundException
 import com.issenur.brighttracker.classroom.ClassroomRepository
 import com.issenur.brighttracker.student.StudentNotFoundException
@@ -11,7 +15,8 @@ import org.springframework.transaction.annotation.Transactional
 class StudentEnrollmentService(
     private val studentEnrollmentRepository: StudentEnrollmentRepository,
     private val studentRepository: StudentRepository,
-    private val classroomRepository: ClassroomRepository
+    private val classroomRepository: ClassroomRepository,
+    private val auditService: AuditService,
 ) {
 
     @Transactional
@@ -45,9 +50,16 @@ class StudentEnrollmentService(
             classroomId = classroomId
         )
 
-        return studentEnrollmentRepository
-            .save(enrollment)
-            .toResponse()
+        val savedEnrollment =
+            studentEnrollmentRepository.save(enrollment)
+
+        auditService.record(
+            action = AuditAction.ASSIGN,
+            resourceType = AuditResourceType.STUDENT_ENROLLMENT,
+            resourceId = savedEnrollment.id,
+        )
+
+        return savedEnrollment.toResponse()
     }
 
     @Transactional(readOnly = true)
@@ -69,6 +81,7 @@ class StudentEnrollmentService(
         classroomId: Long,
         studentId: Long
     ) {
+
         val enrollment =
             studentEnrollmentRepository
                 .findByStudentIdAndClassroomId(
@@ -80,7 +93,15 @@ class StudentEnrollmentService(
                     classroomId
                 )
 
+        val enrollmentId = requireNotNull(enrollment.id)
+
         studentEnrollmentRepository.delete(enrollment)
+
+        auditService.record(
+            action = AuditAction.REMOVE,
+            resourceType = AuditResourceType.STUDENT_ENROLLMENT,
+            resourceId = enrollmentId,
+        )
     }
 
     private fun StudentEnrollment.toResponse() =

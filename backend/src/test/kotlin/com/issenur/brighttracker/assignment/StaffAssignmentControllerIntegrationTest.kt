@@ -1,5 +1,9 @@
 package com.issenur.brighttracker.assignment
 
+import com.issenur.brighttracker.audit.AuditAction
+import com.issenur.brighttracker.audit.AuditLogRepository
+import com.issenur.brighttracker.audit.AuditResourceType
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -31,6 +35,10 @@ class StaffAssignmentControllerIntegrationTest {
     @Autowired
     lateinit var webApplicationContext: WebApplicationContext
 
+    @Autowired
+    lateinit var auditLogRepository: AuditLogRepository
+
+    @Autowired
     lateinit var mockMvc: MockMvc
 
     @BeforeEach
@@ -40,9 +48,18 @@ class StaffAssignmentControllerIntegrationTest {
             .defaultRequest<DefaultMockMvcBuilder>(
                 get("/")
                     .with(
-                        jwt().authorities(
-                            SimpleGrantedAuthority("ROLE_ADMIN")
-                        )
+                        jwt()
+                            .jwt { jwt ->
+                                jwt
+                                    .subject("test-admin-subject")
+                                    .claim(
+                                        "preferred_username",
+                                        "test-admin"
+                                    )
+                            }
+                            .authorities(
+                                SimpleGrantedAuthority("ROLE_ADMIN")
+                            )
                     )
             )
             .apply<DefaultMockMvcBuilder>(springSecurity())
@@ -254,6 +271,93 @@ class StaffAssignmentControllerIntegrationTest {
             .andReturn()
 
         return extractId(result.response.contentAsString)
+    }
+
+    @Test
+    fun `creates audit log when staff is assigned to classroom`() {
+        val classroomId = createClassroom()
+        val staffId = createStaff("TEACHER")
+
+        val result = mockMvc.post(
+            "/api/classrooms/$classroomId/staff/$staffId"
+        )
+            .andExpect {
+                status { isCreated() }
+            }
+            .andReturn()
+
+        val assignmentId =
+            extractId(result.response.contentAsString)
+
+        val auditLog = auditLogRepository.findAll()
+            .filter {
+                it.resourceType ==
+                        AuditResourceType.STAFF_ASSIGNMENT &&
+                        it.resourceId == assignmentId
+            }
+            .last { it.action == AuditAction.ASSIGN }
+
+        assertEquals(AuditAction.ASSIGN, auditLog.action)
+        assertEquals(
+            AuditResourceType.STAFF_ASSIGNMENT,
+            auditLog.resourceType
+        )
+        assertEquals(assignmentId, auditLog.resourceId)
+        assertEquals(
+            "test-admin-subject",
+            auditLog.actorSubject
+        )
+        assertEquals(
+            "test-admin",
+            auditLog.actorUsername
+        )
+    }
+
+    @Test
+    fun `creates audit log when staff assignment is removed`() {
+        val classroomId = createClassroom()
+        val staffId = createStaff("TEACHER")
+
+        val result = mockMvc.post(
+            "/api/classrooms/$classroomId/staff/$staffId"
+        )
+            .andExpect {
+                status { isCreated() }
+            }
+            .andReturn()
+
+        val assignmentId =
+            extractId(result.response.contentAsString)
+
+        mockMvc.delete(
+            "/api/classrooms/$classroomId/staff/$staffId"
+        )
+            .andExpect {
+                status { isNoContent() }
+            }
+
+        val auditLog = auditLogRepository.findAll()
+            .filter {
+                it.resourceType ==
+                        AuditResourceType.STAFF_ASSIGNMENT &&
+                        it.resourceId == assignmentId
+            }
+            .last { it.action == AuditAction.REMOVE }
+
+        assertEquals(AuditAction.REMOVE, auditLog.action)
+        assertEquals(
+            AuditResourceType.STAFF_ASSIGNMENT,
+            auditLog.resourceType
+        )
+        assertEquals(assignmentId, auditLog.resourceId)
+        assertEquals(
+            "test-admin-subject",
+            auditLog.actorSubject
+        )
+        assertEquals(
+            "test-admin",
+            auditLog.actorUsername
+        )
     }
 
     private fun extractId(response: String): Long =

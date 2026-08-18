@@ -1,5 +1,8 @@
 package com.issenur.brighttracker.guardian
 
+import com.issenur.brighttracker.audit.AuditAction
+import com.issenur.brighttracker.audit.AuditResourceType
+import com.issenur.brighttracker.audit.AuditService
 import com.issenur.brighttracker.student.StudentNotFoundException
 import com.issenur.brighttracker.student.StudentRepository
 import org.springframework.stereotype.Service
@@ -9,7 +12,8 @@ import org.springframework.transaction.annotation.Transactional
 class StudentGuardianService(
     private val studentGuardianRepository: StudentGuardianRepository,
     private val studentRepository: StudentRepository,
-    private val guardianRepository: GuardianRepository
+    private val guardianRepository: GuardianRepository,
+    private val auditService: AuditService,
 ) {
 
     @Transactional
@@ -47,9 +51,16 @@ class StudentGuardianService(
             isEmergencyContact = request.isEmergencyContact
         )
 
-        return studentGuardianRepository
-            .save(relationship)
-            .toResponse()
+        val savedRelationship =
+            studentGuardianRepository.save(relationship)
+
+        auditService.record(
+            action = AuditAction.ASSIGN,
+            resourceType = AuditResourceType.STUDENT_GUARDIAN,
+            resourceId = savedRelationship.id,
+        )
+
+        return savedRelationship.toResponse()
     }
 
     @Transactional(readOnly = true)
@@ -94,9 +105,16 @@ class StudentGuardianService(
         relationship.isPrimaryContact = request.isPrimaryContact
         relationship.isEmergencyContact = request.isEmergencyContact
 
-        return studentGuardianRepository
-            .save(relationship)
-            .toResponse()
+        val savedRelationship =
+            studentGuardianRepository.save(relationship)
+
+        auditService.record(
+            action = AuditAction.UPDATE,
+            resourceType = AuditResourceType.STUDENT_GUARDIAN,
+            resourceId = savedRelationship.id,
+        )
+
+        return savedRelationship.toResponse()
     }
 
     @Transactional
@@ -104,8 +122,17 @@ class StudentGuardianService(
         studentId: Long,
         guardianId: Long
     ) {
-        studentGuardianRepository.delete(
+        val relationship =
             findRelationship(studentId, guardianId)
+
+        val relationshipId = requireNotNull(relationship.id)
+
+        studentGuardianRepository.delete(relationship)
+
+        auditService.record(
+            action = AuditAction.REMOVE,
+            resourceType = AuditResourceType.STUDENT_GUARDIAN,
+            resourceId = relationshipId,
         )
     }
 

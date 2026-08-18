@@ -1,5 +1,9 @@
 package com.issenur.brighttracker.guardian
 
+import com.issenur.brighttracker.audit.AuditAction
+import com.issenur.brighttracker.audit.AuditLogRepository
+import com.issenur.brighttracker.audit.AuditResourceType
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -7,7 +11,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity
 import org.springframework.test.context.DynamicPropertyRegistry
@@ -24,11 +27,13 @@ import org.testcontainers.junit.jupiter.Testcontainers
 @SpringBootTest
 @AutoConfigureMockMvc
 @Testcontainers
-@WithMockUser(roles = ["ADMIN"])
 class GuardianControllerIntegrationTest {
 
     @Autowired
     lateinit var webApplicationContext: WebApplicationContext
+
+    @Autowired
+    lateinit var auditLogRepository: AuditLogRepository
 
     @Autowired
     lateinit var mockMvc: MockMvc
@@ -40,9 +45,18 @@ class GuardianControllerIntegrationTest {
             .defaultRequest<DefaultMockMvcBuilder>(
                 MockMvcRequestBuilders.get("/")
                     .with(
-                        jwt().authorities(
-                            SimpleGrantedAuthority("ROLE_ADMIN")
-                        )
+                        jwt()
+                            .jwt { jwt ->
+                                jwt
+                                    .subject("test-admin-subject")
+                                    .claim(
+                                        "preferred_username",
+                                        "test-admin"
+                                    )
+                            }
+                            .authorities(
+                                SimpleGrantedAuthority("ROLE_ADMIN")
+                            )
                     )
             )
             .apply<DefaultMockMvcBuilder>(springSecurity())
@@ -202,6 +216,96 @@ class GuardianControllerIntegrationTest {
               "email": "$email"
             }
         """.trimIndent()
+
+    @Test
+    fun `creates audit log when guardian is created`() {
+        val result = mockMvc.post("/api/guardians") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """
+            {
+              "firstName": "Audit",
+              "lastName": "Guardian",
+              "phoneNumber": "6125551234",
+              "email": "guardian-${System.nanoTime()}@example.com"
+            }
+        """.trimIndent()
+        }
+            .andExpect {
+                status { isCreated() }
+            }
+            .andReturn()
+
+        val guardianId = extractId(result.response.contentAsString)
+
+        val auditLog = auditLogRepository.findAll()
+            .filter {
+                it.resourceType == AuditResourceType.GUARDIAN &&
+                        it.resourceId == guardianId
+            }
+            .last { it.action == AuditAction.CREATE }
+
+        assertEquals(AuditAction.CREATE, auditLog.action)
+        assertEquals(AuditResourceType.GUARDIAN, auditLog.resourceType)
+        assertEquals(guardianId, auditLog.resourceId)
+        assertEquals("test-admin-subject", auditLog.actorSubject)
+        assertEquals("test-admin", auditLog.actorUsername)
+    }
+
+    @Test
+    fun `creates audit log when guardian is updated`() {
+        val guardianId = createGuardian()
+
+        mockMvc.put("/api/guardians/$guardianId") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """
+            {
+              "firstName": "Updated",
+              "lastName": "Guardian",
+              "phoneNumber": "6125559999",
+              "email": "updated-${System.nanoTime()}@example.com"
+            }
+        """.trimIndent()
+        }
+            .andExpect {
+                status { isOk() }
+            }
+
+        val auditLog = auditLogRepository.findAll()
+            .filter {
+                it.resourceType == AuditResourceType.GUARDIAN &&
+                        it.resourceId == guardianId
+            }
+            .last { it.action == AuditAction.UPDATE }
+
+        assertEquals(AuditAction.UPDATE, auditLog.action)
+        assertEquals(AuditResourceType.GUARDIAN, auditLog.resourceType)
+        assertEquals(guardianId, auditLog.resourceId)
+        assertEquals("test-admin-subject", auditLog.actorSubject)
+        assertEquals("test-admin", auditLog.actorUsername)
+    }
+
+    @Test
+    fun `creates audit log when guardian is deleted`() {
+        val guardianId = createGuardian()
+
+        mockMvc.delete("/api/guardians/$guardianId")
+            .andExpect {
+                status { isNoContent() }
+            }
+
+        val auditLog = auditLogRepository.findAll()
+            .filter {
+                it.resourceType == AuditResourceType.GUARDIAN &&
+                        it.resourceId == guardianId
+            }
+            .last { it.action == AuditAction.DELETE }
+
+        assertEquals(AuditAction.DELETE, auditLog.action)
+        assertEquals(AuditResourceType.GUARDIAN, auditLog.resourceType)
+        assertEquals(guardianId, auditLog.resourceId)
+        assertEquals("test-admin-subject", auditLog.actorSubject)
+        assertEquals("test-admin", auditLog.actorUsername)
+    }
 
     private fun extractId(response: String): Long =
         Regex(""""id":(\d+)""")
