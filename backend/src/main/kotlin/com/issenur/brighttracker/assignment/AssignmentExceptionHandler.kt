@@ -6,30 +6,30 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestControllerAdvice
 
 @RestControllerAdvice
-class StaffAssignmentExceptionHandler {
+class AssignmentExceptionHandler {
 
-    @ExceptionHandler(StaffAssignmentNotFoundException::class)
+    @ExceptionHandler(AssignmentNotFoundException::class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     fun handleNotFound(
-        exception: StaffAssignmentNotFoundException
+        exception: AssignmentNotFoundException
     ): Map<String, String> =
         mapOf(
             "message" to exception.message.orEmpty()
         )
 
-    @ExceptionHandler(StaffAssignmentAlreadyExistsException::class)
+    @ExceptionHandler(AssignmentAlreadyExistsException::class)
     @ResponseStatus(HttpStatus.CONFLICT)
     fun handleAlreadyExists(
-        exception: StaffAssignmentAlreadyExistsException
+        exception: AssignmentAlreadyExistsException
     ): Map<String, String> =
         mapOf(
             "message" to exception.message.orEmpty()
         )
 
-    @ExceptionHandler(InvalidClassroomStaffRoleException::class)
+    @ExceptionHandler(AssignmentInvalidRoleException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     fun handleInvalidRole(
-        exception: InvalidClassroomStaffRoleException
+        exception: AssignmentInvalidRoleException
     ): Map<String, String> =
         mapOf(
             "message" to exception.message.orEmpty()

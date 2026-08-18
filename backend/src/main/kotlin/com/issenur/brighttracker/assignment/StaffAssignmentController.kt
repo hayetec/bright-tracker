@@ -5,8 +5,8 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/api/classrooms/{classroomId}/staff")
-class ClassroomStaffAssignmentController(
-    private val assignmentService: ClassroomStaffAssignmentService
+class StaffAssignmentController(
+    private val assignmentService: StaffAssignmentService
 ) {
 
     @PostMapping("/{staffId}")
@@ -14,7 +14,7 @@ class ClassroomStaffAssignmentController(
     fun assign(
         @PathVariable classroomId: Long,
         @PathVariable staffId: Long
-    ): ClassroomStaffAssignmentResponse =
+    ): StaffAssignmentResponse =
         assignmentService.assign(
             classroomId,
             staffId
@@ -23,7 +23,7 @@ class ClassroomStaffAssignmentController(
     @GetMapping
     fun findAll(
         @PathVariable classroomId: Long
-    ): List<ClassroomStaffAssignmentResponse> =
+    ): List<StaffAssignmentResponse> =
         assignmentService.findByClassroom(
             classroomId
         )

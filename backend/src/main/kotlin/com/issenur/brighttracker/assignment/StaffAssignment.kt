@@ -5,7 +5,7 @@ import java.time.OffsetDateTime
 
 @Entity
 @Table(name = "classroom_staff_assignments")
-class ClassroomStaffAssignment(
+class StaffAssignment(
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
