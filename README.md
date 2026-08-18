@@ -21,8 +21,53 @@ meals, allergies, and other school operations.
 - Docker
 - Docker Compose
 
-## Current Features
+## Authentication & Authorization
 
+Bright Tracker uses Keycloak for identity management and Spring Security as an
+OAuth2 Resource Server.
+
+- Keycloak identity provider
+- OAuth 2.0 / OpenID Connect
+- JWT bearer authentication
+- Spring Security OAuth2 Resource Server
+- Stateless API security
+
+### Roles
+
+#### ADMIN
+
+- `GET /api/**`
+- `POST /api/**`
+- `PUT /api/**`
+- `DELETE /api/**`
+
+#### STAFF
+
+- `GET /api/**`
+- Write operations are forbidden
+
+### Local Keycloak Configuration
+
+- URL: `http://localhost:8081`
+- Realm: `bright-tracker`
+- Client: `bright-tracker-api`
+- Client roles:
+    - `ADMIN`
+    - `STAFF`
+
+### Security Behavior
+
+- Missing, invalid, or expired token → `401 Unauthorized`
+- Authenticated user without the required role → `403 Forbidden`
+
+### Security Testing
+
+- Mock JWT authentication for domain integration tests
+- Dedicated security integration tests
+- `KeycloakJwtRolesConverter` unit test
+- 77 tests passing
+
+## Current Features
 ### Student Management
 
 - Create students

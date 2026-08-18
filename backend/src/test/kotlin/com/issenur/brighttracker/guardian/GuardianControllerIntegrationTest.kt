@@ -1,13 +1,22 @@
 package com.issenur.brighttracker.guardian
 
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.http.MediaType
+import org.springframework.security.core.authority.SimpleGrantedAuthority
+import org.springframework.security.test.context.support.WithMockUser
+import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt
+import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity
 import org.springframework.test.context.DynamicPropertyRegistry
 import org.springframework.test.context.DynamicPropertySource
 import org.springframework.test.web.servlet.*
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
+import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder
+import org.springframework.test.web.servlet.setup.MockMvcBuilders
+import org.springframework.web.context.WebApplicationContext
 import org.testcontainers.containers.PostgreSQLContainer
 import org.testcontainers.junit.jupiter.Container
 import org.testcontainers.junit.jupiter.Testcontainers
@@ -15,10 +24,30 @@ import org.testcontainers.junit.jupiter.Testcontainers
 @SpringBootTest
 @AutoConfigureMockMvc
 @Testcontainers
+@WithMockUser(roles = ["ADMIN"])
 class GuardianControllerIntegrationTest {
 
     @Autowired
+    lateinit var webApplicationContext: WebApplicationContext
+
+    @Autowired
     lateinit var mockMvc: MockMvc
+
+    @BeforeEach
+    fun setUpMockMvc() {
+        mockMvc = MockMvcBuilders
+            .webAppContextSetup(webApplicationContext)
+            .defaultRequest<DefaultMockMvcBuilder>(
+                MockMvcRequestBuilders.get("/")
+                    .with(
+                        jwt().authorities(
+                            SimpleGrantedAuthority("ROLE_ADMIN")
+                        )
+                    )
+            )
+            .apply<DefaultMockMvcBuilder>(springSecurity())
+            .build()
+    }
 
     companion object {
 
