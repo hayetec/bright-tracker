@@ -32,6 +32,11 @@ dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-flyway")
 	implementation("org.flywaydb:flyway-database-postgresql")
 
+	implementation("org.springframework.boot:spring-boot-starter-security")
+	implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
+
+	testImplementation("org.springframework.security:spring-security-test")
+
 	runtimeOnly("org.postgresql:postgresql")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -53,6 +58,23 @@ kotlin {
 
 tasks.withType<Test> {
 	useJUnitPlatform()
+
+	testLogging {
+		events("passed", "failed", "skipped")
+	}
+
+	afterSuite(
+		KotlinClosure2<TestDescriptor, TestResult, Unit>({ descriptor, result ->
+			if (descriptor.parent == null) {
+				println(
+					"${result.testCount} tests completed, " +
+							"${result.successfulTestCount} passed, " +
+							"${result.failedTestCount} failed, " +
+							"${result.skippedTestCount} skipped"
+				)
+			}
+		})
+	)
 }
 
 tasks.test {
