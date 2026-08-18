@@ -1,5 +1,9 @@
 package com.issenur.brighttracker.classroom
 
+import com.issenur.brighttracker.audit.AuditAction
+import com.issenur.brighttracker.audit.AuditLogRepository
+import com.issenur.brighttracker.audit.AuditResourceType
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -7,7 +11,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity
 import org.springframework.test.context.DynamicPropertyRegistry
@@ -28,11 +31,13 @@ import org.testcontainers.junit.jupiter.Testcontainers
 @SpringBootTest
 @AutoConfigureMockMvc
 @Testcontainers
-@WithMockUser(roles = ["ADMIN"])
 class ClassroomControllerIntegrationTest {
 
     @Autowired
     lateinit var webApplicationContext: WebApplicationContext
+
+    @Autowired
+    lateinit var auditLogRepository: AuditLogRepository
 
     @Autowired
     lateinit var mockMvc: MockMvc
@@ -44,9 +49,18 @@ class ClassroomControllerIntegrationTest {
             .defaultRequest<DefaultMockMvcBuilder>(
                 MockMvcRequestBuilders.get("/")
                     .with(
-                        jwt().authorities(
-                            SimpleGrantedAuthority("ROLE_ADMIN")
-                        )
+                        jwt()
+                            .jwt { jwt ->
+                                jwt
+                                    .subject("test-admin-subject")
+                                    .claim(
+                                        "preferred_username",
+                                        "test-admin"
+                                    )
+                            }
+                            .authorities(
+                                SimpleGrantedAuthority("ROLE_ADMIN")
+                            )
                     )
             )
             .apply<DefaultMockMvcBuilder>(springSecurity())
@@ -230,4 +244,104 @@ class ClassroomControllerIntegrationTest {
               "status": "ACTIVE"
             }
         """.trimIndent()
+
+    @Test
+    fun `creates audit log when classroom is created`() {
+        val result = mockMvc.post("/api/classrooms") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """
+            {
+              "name": "Audit Room",
+              "gradeLevel": "1",
+              "roomNumber": "201",
+              "capacity": 20,
+              "status": "ACTIVE"
+            }
+        """.trimIndent()
+        }
+            .andExpect {
+                status { isCreated() }
+            }
+            .andReturn()
+
+        val classroomId = extractId(result.response.contentAsString)
+
+        val auditLog = auditLogRepository.findAll()
+            .filter {
+                it.resourceType == AuditResourceType.CLASSROOM &&
+                        it.resourceId == classroomId
+            }
+            .last { it.action == AuditAction.CREATE }
+
+        assertEquals(AuditAction.CREATE, auditLog.action)
+        assertEquals(AuditResourceType.CLASSROOM, auditLog.resourceType)
+        assertEquals(classroomId, auditLog.resourceId)
+        assertEquals("test-admin-subject", auditLog.actorSubject)
+        assertEquals("test-admin", auditLog.actorUsername)
+    }
+
+    @Test
+    fun `creates audit log when classroom is updated`() {
+        val classroomId = createClassroom()
+
+        mockMvc.put("/api/classrooms/$classroomId") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """
+            {
+              "name": "Updated Room",
+              "gradeLevel": "2",
+              "roomNumber": "202",
+              "capacity": 25,
+              "status": "ACTIVE"
+            }
+        """.trimIndent()
+        }
+            .andExpect {
+                status { isOk() }
+            }
+
+        val auditLog = auditLogRepository.findAll()
+            .filter {
+                it.resourceType == AuditResourceType.CLASSROOM &&
+                        it.resourceId == classroomId
+            }
+            .last { it.action == AuditAction.UPDATE }
+
+        assertEquals(AuditAction.UPDATE, auditLog.action)
+        assertEquals(AuditResourceType.CLASSROOM, auditLog.resourceType)
+        assertEquals(classroomId, auditLog.resourceId)
+        assertEquals("test-admin-subject", auditLog.actorSubject)
+        assertEquals("test-admin", auditLog.actorUsername)
+    }
+
+    @Test
+    fun `creates audit log when classroom is deleted`() {
+        val classroomId = createClassroom()
+
+        mockMvc.delete("/api/classrooms/$classroomId")
+            .andExpect {
+                status { isNoContent() }
+            }
+
+        val auditLog = auditLogRepository.findAll()
+            .filter {
+                it.resourceType == AuditResourceType.CLASSROOM &&
+                        it.resourceId == classroomId
+            }
+            .last { it.action == AuditAction.DELETE }
+
+        assertEquals(AuditAction.DELETE, auditLog.action)
+        assertEquals(AuditResourceType.CLASSROOM, auditLog.resourceType)
+        assertEquals(classroomId, auditLog.resourceId)
+        assertEquals("test-admin-subject", auditLog.actorSubject)
+        assertEquals("test-admin", auditLog.actorUsername)
+    }
+
+    private fun extractId(response: String): Long =
+        Regex(""""id":(\d+)""")
+            .find(response)
+            ?.groupValues
+            ?.get(1)
+            ?.toLong()
+            ?: error("ID was not returned")
 }

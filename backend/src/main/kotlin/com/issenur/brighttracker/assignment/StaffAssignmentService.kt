@@ -1,5 +1,8 @@
 package com.issenur.brighttracker.assignment
 
+import com.issenur.brighttracker.audit.AuditAction
+import com.issenur.brighttracker.audit.AuditResourceType
+import com.issenur.brighttracker.audit.AuditService
 import com.issenur.brighttracker.classroom.ClassroomNotFoundException
 import com.issenur.brighttracker.classroom.ClassroomRepository
 import com.issenur.brighttracker.staff.StaffNotFoundException
@@ -12,7 +15,8 @@ import org.springframework.transaction.annotation.Transactional
 class StaffAssignmentService(
     private val assignmentRepository: StaffAssignmentRepository,
     private val classroomRepository: ClassroomRepository,
-    private val staffRepository: StaffRepository
+    private val staffRepository: StaffRepository,
+    private val auditService: AuditService,
 ) {
 
     @Transactional
@@ -52,9 +56,16 @@ class StaffAssignmentService(
             staffId = staffId
         )
 
-        return assignmentRepository
-            .save(assignment)
-            .toResponse()
+        val savedAssignment =
+            assignmentRepository.save(assignment)
+
+        auditService.record(
+            action = AuditAction.ASSIGN,
+            resourceType = AuditResourceType.STAFF_ASSIGNMENT,
+            resourceId = savedAssignment.id,
+        )
+
+        return savedAssignment.toResponse()
     }
 
     @Transactional(readOnly = true)
@@ -86,7 +97,15 @@ class StaffAssignmentService(
                     classroomId
                 )
 
+        val assignmentId = requireNotNull(assignment.id)
+
         assignmentRepository.delete(assignment)
+
+        auditService.record(
+            action = AuditAction.REMOVE,
+            resourceType = AuditResourceType.STAFF_ASSIGNMENT,
+            resourceId = assignmentId,
+        )
     }
 
     private fun StaffAssignment.toResponse() =

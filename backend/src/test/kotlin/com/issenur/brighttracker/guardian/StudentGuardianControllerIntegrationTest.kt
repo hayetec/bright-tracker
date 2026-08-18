@@ -1,5 +1,9 @@
 package com.issenur.brighttracker.guardian
 
+import com.issenur.brighttracker.audit.AuditAction
+import com.issenur.brighttracker.audit.AuditLogRepository
+import com.issenur.brighttracker.audit.AuditResourceType
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -35,6 +39,9 @@ class StudentGuardianControllerIntegrationTest {
     lateinit var webApplicationContext: WebApplicationContext
 
     @Autowired
+    lateinit var auditLogRepository: AuditLogRepository
+
+    @Autowired
     lateinit var mockMvc: MockMvc
 
     @BeforeEach
@@ -44,9 +51,18 @@ class StudentGuardianControllerIntegrationTest {
             .defaultRequest<DefaultMockMvcBuilder>(
                 MockMvcRequestBuilders.get("/")
                     .with(
-                        jwt().authorities(
-                            SimpleGrantedAuthority("ROLE_ADMIN")
-                        )
+                        jwt()
+                            .jwt { jwt ->
+                                jwt
+                                    .subject("test-admin-subject")
+                                    .claim(
+                                        "preferred_username",
+                                        "test-admin"
+                                    )
+                            }
+                            .authorities(
+                                SimpleGrantedAuthority("ROLE_ADMIN")
+                            )
                     )
             )
             .apply<DefaultMockMvcBuilder>(springSecurity())
@@ -326,4 +342,149 @@ class StudentGuardianControllerIntegrationTest {
             ?.get(1)
             ?.toLong()
             ?: error("ID was not returned")
+
+    @Test
+    fun `creates audit log when guardian is linked to student`() {
+        val studentId = createStudent()
+        val guardianId = createGuardian()
+
+        val result = mockMvc.post(
+            "/api/students/$studentId/guardians/$guardianId"
+        ) {
+            contentType = MediaType.APPLICATION_JSON
+            content = """
+            {
+              "relationship": "MOTHER",
+              "isPrimaryContact": true,
+              "isEmergencyContact": true
+            }
+        """.trimIndent()
+        }
+            .andExpect {
+                status { isCreated() }
+            }
+            .andReturn()
+
+        val relationshipId = extractId(
+            result.response.contentAsString
+        )
+
+        val auditLog = auditLogRepository.findAll()
+            .filter {
+                it.resourceType ==
+                        AuditResourceType.STUDENT_GUARDIAN &&
+                        it.resourceId == relationshipId
+            }
+            .last { it.action == AuditAction.ASSIGN }
+
+        assertEquals(AuditAction.ASSIGN, auditLog.action)
+        assertEquals(
+            AuditResourceType.STUDENT_GUARDIAN,
+            auditLog.resourceType
+        )
+        assertEquals(relationshipId, auditLog.resourceId)
+        assertEquals("test-admin-subject", auditLog.actorSubject)
+        assertEquals("test-admin", auditLog.actorUsername)
+    }
+
+    @Test
+    fun `creates audit log when student guardian relationship is updated`() {
+        val studentId = createStudent()
+        val guardianId = createGuardian()
+        val relationshipId = linkGuardianToStudent(
+            studentId,
+            guardianId
+        )
+
+        mockMvc.put(
+            "/api/students/$studentId/guardians/$guardianId"
+        ) {
+            contentType = MediaType.APPLICATION_JSON
+            content = """
+            {
+              "relationship": "FATHER",
+              "isPrimaryContact": false,
+              "isEmergencyContact": true
+            }
+        """.trimIndent()
+        }
+            .andExpect {
+                status { isOk() }
+            }
+
+        val auditLog = auditLogRepository.findAll()
+            .filter {
+                it.resourceType ==
+                        AuditResourceType.STUDENT_GUARDIAN &&
+                        it.resourceId == relationshipId
+            }
+            .last { it.action == AuditAction.UPDATE }
+
+        assertEquals(AuditAction.UPDATE, auditLog.action)
+        assertEquals(
+            AuditResourceType.STUDENT_GUARDIAN,
+            auditLog.resourceType
+        )
+        assertEquals(relationshipId, auditLog.resourceId)
+        assertEquals("test-admin-subject", auditLog.actorSubject)
+        assertEquals("test-admin", auditLog.actorUsername)
+    }
+
+    @Test
+    fun `creates audit log when guardian is removed from student`() {
+        val studentId = createStudent()
+        val guardianId = createGuardian()
+        val relationshipId = linkGuardianToStudent(
+            studentId,
+            guardianId
+        )
+
+        mockMvc.delete(
+            "/api/students/$studentId/guardians/$guardianId"
+        )
+            .andExpect {
+                status { isNoContent() }
+            }
+
+        val auditLog = auditLogRepository.findAll()
+            .filter {
+                it.resourceType ==
+                        AuditResourceType.STUDENT_GUARDIAN &&
+                        it.resourceId == relationshipId
+            }
+            .last { it.action == AuditAction.REMOVE }
+
+        assertEquals(AuditAction.REMOVE, auditLog.action)
+        assertEquals(
+            AuditResourceType.STUDENT_GUARDIAN,
+            auditLog.resourceType
+        )
+        assertEquals(relationshipId, auditLog.resourceId)
+        assertEquals("test-admin-subject", auditLog.actorSubject)
+        assertEquals("test-admin", auditLog.actorUsername)
+    }
+
+    private fun linkGuardianToStudent(
+        studentId: Long,
+        guardianId: Long
+    ): Long {
+        val result = mockMvc.post(
+            "/api/students/$studentId/guardians/$guardianId"
+        ) {
+            contentType = MediaType.APPLICATION_JSON
+            content = """
+            {
+              "relationship": "MOTHER",
+              "isPrimaryContact": true,
+              "isEmergencyContact": true
+            }
+        """.trimIndent()
+        }
+            .andExpect {
+                status { isCreated() }
+            }
+            .andReturn()
+
+        return extractId(result.response.contentAsString)
+    }
 }

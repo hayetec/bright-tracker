@@ -1,12 +1,18 @@
 package com.issenur.brighttracker.classroom
 
+import com.issenur.brighttracker.audit.AuditAction
+import com.issenur.brighttracker.audit.AuditResourceType
+import com.issenur.brighttracker.audit.AuditService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 class ClassroomService(
-    private val classroomRepository: ClassroomRepository
+    private val classroomRepository: ClassroomRepository,
+    private val auditService: AuditService,
 ) {
+
+// ClassroomService
 
     @Transactional
     fun create(request: ClassroomRequest): ClassroomResponse {
@@ -18,7 +24,15 @@ class ClassroomService(
             status = request.status
         )
 
-        return classroomRepository.save(classroom).toResponse()
+        val savedClassroom = classroomRepository.save(classroom)
+
+        auditService.record(
+            action = AuditAction.CREATE,
+            resourceType = AuditResourceType.CLASSROOM,
+            resourceId = savedClassroom.id,
+        )
+
+        return savedClassroom.toResponse()
     }
 
     @Transactional(readOnly = true)
@@ -42,14 +56,27 @@ class ClassroomService(
         classroom.capacity = request.capacity
         classroom.status = request.status
 
-        return classroomRepository.save(classroom).toResponse()
+        val savedClassroom = classroomRepository.save(classroom)
+
+        auditService.record(
+            action = AuditAction.UPDATE,
+            resourceType = AuditResourceType.CLASSROOM,
+            resourceId = savedClassroom.id,
+        )
+
+        return savedClassroom.toResponse()
     }
 
     @Transactional
     fun delete(id: Long) {
         classroomRepository.delete(findClassroom(id))
-    }
 
+        auditService.record(
+            action = AuditAction.DELETE,
+            resourceType = AuditResourceType.CLASSROOM,
+            resourceId = id,
+        )
+    }
     private fun findClassroom(id: Long): Classroom =
         classroomRepository.findById(id)
             .orElseThrow { ClassroomNotFoundException(id) }

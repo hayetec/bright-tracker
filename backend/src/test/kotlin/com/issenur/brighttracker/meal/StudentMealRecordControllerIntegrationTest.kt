@@ -1,5 +1,9 @@
 package com.issenur.brighttracker.meal
 
+import com.issenur.brighttracker.audit.AuditAction
+import com.issenur.brighttracker.audit.AuditLogRepository
+import com.issenur.brighttracker.audit.AuditResourceType
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -7,7 +11,6 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity
 import org.springframework.test.context.DynamicPropertyRegistry
@@ -28,13 +31,14 @@ import org.testcontainers.junit.jupiter.Testcontainers
 @SpringBootTest
 @AutoConfigureMockMvc
 @Testcontainers
-@WithMockUser(roles = ["ADMIN"])
 class StudentMealRecordControllerIntegrationTest {
 
     @Autowired
     lateinit var webApplicationContext: WebApplicationContext
 
     @Autowired
+    lateinit var auditLogRepository: AuditLogRepository
+
     lateinit var mockMvc: MockMvc
 
     @BeforeEach
@@ -44,9 +48,18 @@ class StudentMealRecordControllerIntegrationTest {
             .defaultRequest<DefaultMockMvcBuilder>(
                 MockMvcRequestBuilders.get("/")
                     .with(
-                        jwt().authorities(
-                            SimpleGrantedAuthority("ROLE_ADMIN")
-                        )
+                        jwt()
+                            .jwt { jwt ->
+                                jwt
+                                    .subject("test-admin-subject")
+                                    .claim(
+                                        "preferred_username",
+                                        "test-admin"
+                                    )
+                            }
+                            .authorities(
+                                SimpleGrantedAuthority("ROLE_ADMIN")
+                            )
                     )
             )
             .apply<DefaultMockMvcBuilder>(springSecurity())
@@ -233,16 +246,164 @@ class StudentMealRecordControllerIntegrationTest {
             }
     }
 
-    private fun createMealRecord(
-        studentId: Long
-    ) {
-        mockMvc.post("/api/students/$studentId/meals") {
+    @Test
+    fun `creates audit log when meal record is created`() {
+        val studentId = createStudent()
+
+        val result = mockMvc.post(
+            "/api/students/$studentId/meals"
+        ) {
             contentType = MediaType.APPLICATION_JSON
             content = createRequest()
         }
             .andExpect {
                 status { isCreated() }
             }
+            .andReturn()
+
+        val mealRecordId =
+            extractId(result.response.contentAsString)
+
+        val auditLog = auditLogRepository.findAll()
+            .filter {
+                it.resourceType ==
+                        AuditResourceType.STUDENT_MEAL_RECORD &&
+                        it.resourceId == mealRecordId
+            }
+            .last { it.action == AuditAction.CREATE }
+
+        assertEquals(
+            AuditAction.CREATE,
+            auditLog.action
+        )
+        assertEquals(
+            AuditResourceType.STUDENT_MEAL_RECORD,
+            auditLog.resourceType
+        )
+        assertEquals(
+            mealRecordId,
+            auditLog.resourceId
+        )
+        assertEquals(
+            "test-admin-subject",
+            auditLog.actorSubject
+        )
+        assertEquals(
+            "test-admin",
+            auditLog.actorUsername
+        )
+    }
+
+    @Test
+    fun `creates audit log when meal record is updated`() {
+        val studentId = createStudent()
+        val mealRecordId = createMealRecord(studentId)
+
+        mockMvc.put(
+            "/api/students/$studentId/meals/2026-08-16"
+        ) {
+            contentType = MediaType.APPLICATION_JSON
+            content = """
+                {
+                  "breakfastEaten": false,
+                  "lunchEaten": true,
+                  "dinnerEaten": false
+                }
+            """.trimIndent()
+        }
+            .andExpect {
+                status { isOk() }
+            }
+
+        val auditLog = auditLogRepository.findAll()
+            .filter {
+                it.resourceType ==
+                        AuditResourceType.STUDENT_MEAL_RECORD &&
+                        it.resourceId == mealRecordId
+            }
+            .last { it.action == AuditAction.UPDATE }
+
+        assertEquals(
+            AuditAction.UPDATE,
+            auditLog.action
+        )
+        assertEquals(
+            AuditResourceType.STUDENT_MEAL_RECORD,
+            auditLog.resourceType
+        )
+        assertEquals(
+            mealRecordId,
+            auditLog.resourceId
+        )
+        assertEquals(
+            "test-admin-subject",
+            auditLog.actorSubject
+        )
+        assertEquals(
+            "test-admin",
+            auditLog.actorUsername
+        )
+    }
+
+    @Test
+    fun `creates audit log when meal record is deleted`() {
+        val studentId = createStudent()
+        val mealRecordId = createMealRecord(studentId)
+
+        mockMvc.delete(
+            "/api/students/$studentId/meals/2026-08-16"
+        )
+            .andExpect {
+                status { isNoContent() }
+            }
+
+        val auditLog = auditLogRepository.findAll()
+            .filter {
+                it.resourceType ==
+                        AuditResourceType.STUDENT_MEAL_RECORD &&
+                        it.resourceId == mealRecordId
+            }
+            .last { it.action == AuditAction.DELETE }
+
+        assertEquals(
+            AuditAction.DELETE,
+            auditLog.action
+        )
+        assertEquals(
+            AuditResourceType.STUDENT_MEAL_RECORD,
+            auditLog.resourceType
+        )
+        assertEquals(
+            mealRecordId,
+            auditLog.resourceId
+        )
+        assertEquals(
+            "test-admin-subject",
+            auditLog.actorSubject
+        )
+        assertEquals(
+            "test-admin",
+            auditLog.actorUsername
+        )
+    }
+
+    private fun createMealRecord(
+        studentId: Long
+    ): Long {
+        val result = mockMvc.post(
+            "/api/students/$studentId/meals"
+        ) {
+            contentType = MediaType.APPLICATION_JSON
+            content = createRequest()
+        }
+            .andExpect {
+                status { isCreated() }
+            }
+            .andReturn()
+
+        return extractId(
+            result.response.contentAsString
+        )
     }
 
     private fun createRequest(): String =
@@ -273,11 +434,16 @@ class StudentMealRecordControllerIntegrationTest {
             }
             .andReturn()
 
-        return Regex(""""id":(\d+)""")
-            .find(result.response.contentAsString)
+        return extractId(
+            result.response.contentAsString
+        )
+    }
+
+    private fun extractId(response: String): Long =
+        Regex(""""id":(\d+)""")
+            .find(response)
             ?.groupValues
             ?.get(1)
             ?.toLong()
-            ?: error("Student ID was not returned")
-    }
+            ?: error("ID was not returned")
 }

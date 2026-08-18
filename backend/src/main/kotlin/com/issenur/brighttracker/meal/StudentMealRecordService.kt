@@ -1,5 +1,8 @@
 package com.issenur.brighttracker.meal
 
+import com.issenur.brighttracker.audit.AuditAction
+import com.issenur.brighttracker.audit.AuditResourceType
+import com.issenur.brighttracker.audit.AuditService
 import com.issenur.brighttracker.student.StudentNotFoundException
 import com.issenur.brighttracker.student.StudentRepository
 import org.springframework.stereotype.Service
@@ -9,7 +12,8 @@ import java.time.LocalDate
 @Service
 class StudentMealRecordService(
     private val mealRecordRepository: StudentMealRecordRepository,
-    private val studentRepository: StudentRepository
+    private val studentRepository: StudentRepository,
+    private val auditService: AuditService,
 ) {
 
     @Transactional
@@ -42,9 +46,16 @@ class StudentMealRecordService(
             dinnerEaten = request.dinnerEaten
         )
 
-        return mealRecordRepository
-            .save(mealRecord)
-            .toResponse()
+        val savedMealRecord =
+            mealRecordRepository.save(mealRecord)
+
+        auditService.record(
+            action = AuditAction.CREATE,
+            resourceType = AuditResourceType.STUDENT_MEAL_RECORD,
+            resourceId = savedMealRecord.id,
+        )
+
+        return savedMealRecord.toResponse()
     }
 
     @Transactional(readOnly = true)
@@ -85,9 +96,16 @@ class StudentMealRecordService(
         mealRecord.lunchEaten = request.lunchEaten
         mealRecord.dinnerEaten = request.dinnerEaten
 
-        return mealRecordRepository
-            .save(mealRecord)
-            .toResponse()
+        val savedMealRecord =
+            mealRecordRepository.save(mealRecord)
+
+        auditService.record(
+            action = AuditAction.UPDATE,
+            resourceType = AuditResourceType.STUDENT_MEAL_RECORD,
+            resourceId = savedMealRecord.id,
+        )
+
+        return savedMealRecord.toResponse()
     }
 
     @Transactional
@@ -95,8 +113,15 @@ class StudentMealRecordService(
         studentId: Long,
         recordDate: LocalDate
     ) {
-        mealRecordRepository.delete(
-            findMealRecord(studentId, recordDate)
+        val mealRecord = findMealRecord(studentId, recordDate)
+        val mealRecordId = requireNotNull(mealRecord.id)
+
+        mealRecordRepository.delete(mealRecord)
+
+        auditService.record(
+            action = AuditAction.DELETE,
+            resourceType = AuditResourceType.STUDENT_MEAL_RECORD,
+            resourceId = mealRecordId,
         )
     }
 

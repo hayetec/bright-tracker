@@ -1,5 +1,9 @@
 package com.issenur.brighttracker.student
 
+import com.issenur.brighttracker.audit.AuditAction
+import com.issenur.brighttracker.audit.AuditLogRepository
+import com.issenur.brighttracker.audit.AuditResourceType
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.test.context.DynamicPropertyRegistry
@@ -9,7 +13,6 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.security.core.authority.SimpleGrantedAuthority
-import org.springframework.security.test.context.support.WithMockUser
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt
 import org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity
 import org.springframework.test.web.servlet.MockMvc
@@ -28,11 +31,13 @@ import org.testcontainers.junit.jupiter.Testcontainers
 @SpringBootTest
 @AutoConfigureMockMvc
 @Testcontainers
-@WithMockUser(roles = ["ADMIN"])
 class StudentControllerIntegrationTest {
 
     @Autowired
     lateinit var webApplicationContext: WebApplicationContext
+
+    @Autowired
+    lateinit var auditLogRepository: AuditLogRepository
 
     @Autowired
     lateinit var mockMvc: MockMvc
@@ -44,9 +49,15 @@ class StudentControllerIntegrationTest {
             .defaultRequest<DefaultMockMvcBuilder>(
                 MockMvcRequestBuilders.get("/")
                     .with(
-                        jwt().authorities(
-                            SimpleGrantedAuthority("ROLE_ADMIN")
-                        )
+                        jwt()
+                            .jwt { jwt ->
+                                jwt
+                                    .subject("test-admin-subject")
+                                    .claim("preferred_username", "test-admin")
+                            }
+                            .authorities(
+                                SimpleGrantedAuthority("ROLE_ADMIN")
+                            )
                     )
             )
             .apply<DefaultMockMvcBuilder>(springSecurity())
@@ -218,4 +229,90 @@ class StudentControllerIntegrationTest {
                 status { isNotFound() }
             }
     }
+
+    @Test
+    fun `creates audit log when student is created`() {
+        val result = mockMvc.post("/api/students") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """
+            {
+              "firstName": "Audit",
+              "lastName": "Student",
+              "dateOfBirth": "2018-01-01",
+              "gradeLevel": "1",
+              "status": "ACTIVE"
+            }
+        """.trimIndent()
+        }
+            .andExpect {
+                status { isCreated() }
+            }
+            .andReturn()
+
+        val studentId = extractId(result.response.contentAsString)
+
+        val auditLog = auditLogRepository.findAll()
+            .last()
+
+        assertEquals(AuditAction.CREATE, auditLog.action)
+        assertEquals(AuditResourceType.STUDENT, auditLog.resourceType)
+        assertEquals(studentId, auditLog.resourceId)
+        assertEquals("test-admin-subject", auditLog.actorSubject)
+        assertEquals("test-admin", auditLog.actorUsername)
+    }
+
+    @Test
+    fun `creates audit log when student is updated`() {
+        val id = createStudent()
+
+        mockMvc.put("/api/students/$id") {
+            contentType = MediaType.APPLICATION_JSON
+            content = """
+            {
+              "firstName": "Amina",
+              "lastName": "Ahmed",
+              "dateOfBirth": "2018-05-14",
+              "gradeLevel": "2",
+              "status": "ACTIVE"
+            }
+        """.trimIndent()
+        }
+            .andExpect {
+                status { isOk() }
+            }
+
+        val auditLog = auditLogRepository.findAll().last()
+
+        assertEquals(AuditAction.UPDATE, auditLog.action)
+        assertEquals(AuditResourceType.STUDENT, auditLog.resourceType)
+        assertEquals(id, auditLog.resourceId)
+        assertEquals("test-admin-subject", auditLog.actorSubject)
+        assertEquals("test-admin", auditLog.actorUsername)
+    }
+
+    @Test
+    fun `creates audit log when student is deleted`() {
+        val id = createStudent()
+
+        mockMvc.delete("/api/students/$id")
+            .andExpect {
+                status { isNoContent() }
+            }
+
+        val auditLog = auditLogRepository.findAll().last()
+
+        assertEquals(AuditAction.DELETE, auditLog.action)
+        assertEquals(AuditResourceType.STUDENT, auditLog.resourceType)
+        assertEquals(id, auditLog.resourceId)
+        assertEquals("test-admin-subject", auditLog.actorSubject)
+        assertEquals("test-admin", auditLog.actorUsername)
+    }
+
+    private fun extractId(response: String): Long =
+        Regex(""""id":(\d+)""")
+            .find(response)
+            ?.groupValues
+            ?.get(1)
+            ?.toLong()
+            ?: error("ID was not returned")
 }

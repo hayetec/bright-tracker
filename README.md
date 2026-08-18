@@ -65,9 +65,52 @@ OAuth2 Resource Server.
 - Mock JWT authentication for domain integration tests
 - Dedicated security integration tests
 - `KeycloakJwtRolesConverter` unit test
-- 77 tests passing
+- 102 tests passing
+
+## Audit Logging
+
+Bright Tracker records authenticated user activity for mutating operations.
+
+Audit events include:
+
+- Authenticated Keycloak subject
+- Username
+- Action
+- Resource type
+- Resource ID
+- Timestamp
+- Optional details
+
+### Audited Actions
+
+Standard resource domains use:
+
+- `CREATE`
+- `UPDATE`
+- `DELETE`
+
+Relationship domains use:
+
+- `ASSIGN`
+- `UPDATE`
+- `REMOVE`
+
+Audited domains include:
+
+- Student
+- Staff
+- Classroom
+- Guardian
+- Student Allergy
+- Student Meal Record
+- Student Enrollment
+- Staff Assignment
+- Student-Guardian relationships
+
+Audit records are persisted in PostgreSQL through the `audit_logs` table.
 
 ## Current Features
+
 ### Student Management
 
 - Create students

@@ -1,11 +1,15 @@
 package com.issenur.brighttracker.student
 
+import com.issenur.brighttracker.audit.AuditAction
+import com.issenur.brighttracker.audit.AuditResourceType
+import com.issenur.brighttracker.audit.AuditService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 class StudentService(
-    private val studentRepository: StudentRepository
+    private val studentRepository: StudentRepository,
+    private val auditService: AuditService,
 ) {
 
     @Transactional
@@ -18,7 +22,15 @@ class StudentService(
             status = request.status
         )
 
-        return studentRepository.save(student).toResponse()
+        val savedStudent = studentRepository.save(student)
+
+        auditService.record(
+            action = AuditAction.CREATE,
+            resourceType = AuditResourceType.STUDENT,
+            resourceId = savedStudent.id,
+        )
+
+        return savedStudent.toResponse()
     }
 
     @Transactional(readOnly = true)
@@ -51,13 +63,28 @@ class StudentService(
         student.gradeLevel = request.gradeLevel
         student.status = request.status
 
-        return studentRepository.save(student).toResponse()
+        val savedStudent = studentRepository.save(student)
+
+        auditService.record(
+            action = AuditAction.UPDATE,
+            resourceType = AuditResourceType.STUDENT,
+            resourceId = savedStudent.id,
+        )
+
+        return savedStudent.toResponse()
     }
 
     @Transactional
     fun delete(id: Long) {
         val student = findStudent(id)
+
         studentRepository.delete(student)
+
+        auditService.record(
+            action = AuditAction.DELETE,
+            resourceType = AuditResourceType.STUDENT,
+            resourceId = id,
+        )
     }
 
     private fun findStudent(id: Long): Student =

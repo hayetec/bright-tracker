@@ -1,11 +1,15 @@
 package com.issenur.brighttracker.guardian
 
+import com.issenur.brighttracker.audit.AuditAction
+import com.issenur.brighttracker.audit.AuditResourceType
+import com.issenur.brighttracker.audit.AuditService
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 
 @Service
 class GuardianService(
-    private val guardianRepository: GuardianRepository
+    private val guardianRepository: GuardianRepository,
+    private val auditService: AuditService,
 ) {
 
     @Transactional
@@ -17,9 +21,15 @@ class GuardianService(
             email = request.email
         )
 
-        return guardianRepository
-            .save(guardian)
-            .toResponse()
+        val savedGuardian = guardianRepository.save(guardian)
+
+        auditService.record(
+            action = AuditAction.CREATE,
+            resourceType = AuditResourceType.GUARDIAN,
+            resourceId = savedGuardian.id,
+        )
+
+        return savedGuardian.toResponse()
     }
 
     @Transactional(readOnly = true)
@@ -37,7 +47,6 @@ class GuardianService(
         id: Long,
         request: GuardianRequest
     ): GuardianResponse {
-
         val guardian = findGuardian(id)
 
         guardian.firstName = request.firstName
@@ -45,14 +54,26 @@ class GuardianService(
         guardian.phoneNumber = request.phoneNumber
         guardian.email = request.email
 
-        return guardianRepository
-            .save(guardian)
-            .toResponse()
+        val savedGuardian = guardianRepository.save(guardian)
+
+        auditService.record(
+            action = AuditAction.UPDATE,
+            resourceType = AuditResourceType.GUARDIAN,
+            resourceId = savedGuardian.id,
+        )
+
+        return savedGuardian.toResponse()
     }
 
     @Transactional
     fun delete(id: Long) {
         guardianRepository.delete(findGuardian(id))
+
+        auditService.record(
+            action = AuditAction.DELETE,
+            resourceType = AuditResourceType.GUARDIAN,
+            resourceId = id,
+        )
     }
 
     private fun findGuardian(id: Long): Guardian =
