@@ -15,6 +15,10 @@ interface StudentMealRecordRepository :
         recordDate: LocalDate
     ): StudentMealRecord?
 
+    fun findAllByRecordDate(
+        recordDate: LocalDate
+    ): List<StudentMealRecord>
+
     fun existsByStudentIdAndRecordDate(
         studentId: Long,
         recordDate: LocalDate
