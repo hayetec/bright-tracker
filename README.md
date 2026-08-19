@@ -2,10 +2,19 @@
 
 Bright Tracker is a full-stack school management application designed to support
 day-to-day school operations. The application provides a tablet-friendly
-interface for managing students, staff, classrooms, guardians, attendance,
-meals, allergies, and other school operations.
+interface for managing students, staff, classrooms, guardians, meals, allergies,
+and other school operations.
 
 ## Tech Stack
+
+### Frontend
+
+- React
+- TypeScript
+- Vite
+- React Router
+- Keycloak JS
+- Native Fetch API
 
 ### Backend
 
@@ -24,13 +33,30 @@ meals, allergies, and other school operations.
 ## Authentication & Authorization
 
 Bright Tracker uses Keycloak for identity management and Spring Security as an
-OAuth2 Resource Server.
+OAuth2 Resource Server for JWT-based API authorization.
 
-- Keycloak identity provider
-- OAuth 2.0 / OpenID Connect
-- JWT bearer authentication
-- Spring Security OAuth2 Resource Server
-- Stateless API security
+### Local Keycloak Configuration
+
+- URL: `http://localhost:8081`
+- Realm: `bright-tracker`
+- Client: `bright-tracker-api`
+- Client roles:
+  - `ADMIN`
+  - `STAFF`
+
+#### Clients
+
+- `bright-tracker-api`
+  - Spring Boot resource server
+  - Client roles:
+    - `ADMIN`
+    - `STAFF`
+
+- `bright-tracker-web`
+  - React frontend
+  - Public OpenID Connect client
+  - Standard authorization code flow with PKCE
+  - Local redirect URI: `http://localhost:5173/*`
 
 ### Roles
 
@@ -337,6 +363,46 @@ Current integration test coverage includes:
 Integration tests use Testcontainers to start an isolated PostgreSQL 16
 database. Flyway migrations are automatically applied before the tests run.
 
+## Frontend MVP
+
+The frontend is a tablet-friendly React application for school staff.
+
+### Authentication
+
+- Users authenticate through Keycloak using OpenID Connect.
+- The frontend sends the Keycloak access token to the Spring Boot API.
+- `ADMIN` users receive interactive management controls.
+- `STAFF` users currently have read-only access.
+
+### Navigation
+
+The application includes routes for:
+
+- Dashboard
+- Meals
+- Students
+- Classrooms
+- Guardians
+- Staff
+
+### Daily Meal Dashboard
+
+The daily meal dashboard is the primary MVP workflow.
+
+It currently supports:
+
+- School-wide AM snack, lunch, and PM snack progress
+- Eaten and remaining counts for each meal period
+- Student name and classroom display
+- Student allergy indicators
+- Daily meal status for each student
+- ADMIN meal status updates
+- STAFF read-only meal status
+- Automatic dashboard refresh after meal updates
+
+During local development, Vite runs on port `5173` and proxies `/api`
+requests to the Spring Boot application on port `8080`.
+
 ## API Overview
 
 ### Students
@@ -484,21 +550,33 @@ bright-tracker/
 │       ├── kotlin/com/issenur/brighttracker/
 │       │   ├── allergy/
 │       │   ├── assignment/
+│       │   ├── audit/
 │       │   ├── classroom/
 │       │   ├── enrollment/
 │       │   ├── guardian/
 │       │   ├── meal/
+│       │   ├── security/
 │       │   ├── staff/
 │       │   └── student/
 │       └── resources/
 │           └── db/migration/
+├── frontend/
+│   └── src/
+│       ├── api/
+│       ├── auth/
+│       ├── components/
+│       ├── pages/
+│       └── types/
 ├── docker-compose.yml
 └── README.md
 ```
 
 ## Local Development
 
-Start PostgreSQL:
+Bright Tracker requires PostgreSQL, Keycloak, the Spring Boot API, and the
+React frontend during local development.
+
+### Start Infrastructure
 
 ```bash
 docker compose up -d
@@ -518,9 +596,6 @@ The backend API runs locally on port `8080`.
 Integration tests use JUnit 5, Spring Boot Test, MockMvc, Testcontainers,
 and PostgreSQL 16. Testcontainers provides an isolated PostgreSQL database,
 and Flyway applies the database migrations before the tests run.
-
-Current integration tests cover the Student and Staff APIs, including CRUD
-operations, request validation, and `404 Not Found` handling.
 
 ### Run Tests
 
