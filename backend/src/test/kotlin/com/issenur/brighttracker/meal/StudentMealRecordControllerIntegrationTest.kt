@@ -110,13 +110,13 @@ class StudentMealRecordControllerIntegrationTest {
                 jsonPath("$.recordDate") {
                     value("2026-08-16")
                 }
-                jsonPath("$.breakfastEaten") {
+                jsonPath("$.amSnackEaten") {
                     value(true)
                 }
                 jsonPath("$.lunchEaten") {
                     value(false)
                 }
-                jsonPath("$.dinnerEaten") {
+                jsonPath("$.pmSnackEaten") {
                     value(true)
                 }
             }
@@ -169,21 +169,21 @@ class StudentMealRecordControllerIntegrationTest {
             contentType = MediaType.APPLICATION_JSON
             content = """
                 {
-                  "breakfastEaten": false,
+                  "amSnackEaten": false,
                   "lunchEaten": true,
-                  "dinnerEaten": false
+                  "pmSnackEaten": false
                 }
             """.trimIndent()
         }
             .andExpect {
                 status { isOk() }
-                jsonPath("$.breakfastEaten") {
+                jsonPath("$.amSnackEaten") {
                     value(false)
                 }
                 jsonPath("$.lunchEaten") {
                     value(true)
                 }
-                jsonPath("$.dinnerEaten") {
+                jsonPath("$.pmSnackEaten") {
                     value(false)
                 }
             }
@@ -305,9 +305,9 @@ class StudentMealRecordControllerIntegrationTest {
             contentType = MediaType.APPLICATION_JSON
             content = """
                 {
-                  "breakfastEaten": false,
+                  "amSnackEaten": false,
                   "lunchEaten": true,
-                  "dinnerEaten": false
+                  "pmSnackEaten": false
                 }
             """.trimIndent()
         }
@@ -410,9 +410,9 @@ class StudentMealRecordControllerIntegrationTest {
         """
             {
               "recordDate": "2026-08-16",
-              "breakfastEaten": true,
+              "amSnackEaten": true,
               "lunchEaten": false,
-              "dinnerEaten": true
+              "pmSnackEaten": true
             }
         """.trimIndent()
 

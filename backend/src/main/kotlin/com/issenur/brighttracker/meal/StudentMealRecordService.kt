@@ -41,9 +41,9 @@ class StudentMealRecordService(
         val mealRecord = StudentMealRecord(
             studentId = studentId,
             recordDate = request.recordDate,
-            breakfastEaten = request.breakfastEaten,
+            amSnackEaten = request.amSnackEaten,
             lunchEaten = request.lunchEaten,
-            dinnerEaten = request.dinnerEaten
+            pmSnackEaten = request.pmSnackEaten
         )
 
         val savedMealRecord =
@@ -92,9 +92,9 @@ class StudentMealRecordService(
             recordDate
         )
 
-        mealRecord.breakfastEaten = request.breakfastEaten
+        mealRecord.amSnackEaten = request.amSnackEaten
         mealRecord.lunchEaten = request.lunchEaten
-        mealRecord.dinnerEaten = request.dinnerEaten
+        mealRecord.pmSnackEaten = request.pmSnackEaten
 
         val savedMealRecord =
             mealRecordRepository.save(mealRecord)
@@ -144,9 +144,9 @@ class StudentMealRecordService(
             id = requireNotNull(id),
             studentId = studentId,
             recordDate = recordDate,
-            breakfastEaten = breakfastEaten,
+            amSnackEaten = amSnackEaten,
             lunchEaten = lunchEaten,
-            dinnerEaten = dinnerEaten,
+            pmSnackEaten = pmSnackEaten,
             createdAt = createdAt,
             updatedAt = updatedAt
         )

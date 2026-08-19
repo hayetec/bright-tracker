@@ -186,7 +186,7 @@ Audit records are persisted in PostgreSQL through the `audit_logs` table.
 ### Student Meal Tracking
 
 - Create daily meal records for students
-- Track breakfast, lunch, and dinner participation
+- Track AM snack, lunch, and PM snack participation
 - View all meal records for a student
 - View a student's meal record by date
 - Update daily meal participation
@@ -206,6 +206,15 @@ Audit records are persisted in PostgreSQL through the `audit_logs` table.
 - Delete allergy records
 - Prevent duplicate allergens for the same student
 - Treat allergen names as case-insensitive for duplicate detection
+
+### Meal Dashboard
+
+- View school-wide AM snack, lunch, and PM snack progress
+- View eaten and remaining student counts for each meal period
+- View each student's daily meal status
+- View each student's classroom
+- Identify students with allergies
+- Treat missing daily meal records as not eaten
 
 ## Testing
 
@@ -411,6 +420,12 @@ database. Flyway migrations are automatically applied before the tests run.
 | PUT    | `/api/students/{studentId}/allergies/{allergyId}` | Update an allergy          |
 | DELETE | `/api/students/{studentId}/allergies/{allergyId}` | Delete an allergy          |
 
+### Meal Dashboard
+
+| Method | Endpoint                                     | Description                                      |
+| ------ | -------------------------------------------- | ------------------------------------------------ |
+| GET    | `/api/meal-dashboard?date={yyyy-MM-dd}`      | View school-wide meal progress for a date        |
+
 ## Database Relationships
 
 ```text
@@ -430,9 +445,9 @@ Student
 ├── Meal Records
 │   └── student_meal_records
 │       ├── record_date
-│       ├── breakfast_eaten
+│       ├── am_snack_eaten
 │       ├── lunch_eaten
-│       └── dinner_eaten
+│       └── pm_snack_eaten
 │
 └── Allergies
     └── student_allergies
@@ -451,6 +466,14 @@ multiple guardians, and a guardian can be associated with multiple students.
 Each student can have multiple daily meal records and multiple allergy records.
 A meal record belongs to a single student and date, while an allergy record
 belongs to a single student.
+
+## Database Migrations
+
+Database schema changes are managed with Flyway.
+
+Recent migrations include:
+
+- `V10` — Renamed meal fields from breakfast/dinner terminology to AM snack/PM snack terminology
 
 ## Project Structure
 

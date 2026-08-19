@@ -7,9 +7,9 @@ data class StudentMealRecordResponse(
     val id: Long,
     val studentId: Long,
     val recordDate: LocalDate,
-    val breakfastEaten: Boolean,
+    val amSnackEaten: Boolean,
     val lunchEaten: Boolean,
-    val dinnerEaten: Boolean,
+    val pmSnackEaten: Boolean,
     val createdAt: OffsetDateTime?,
     val updatedAt: OffsetDateTime?
 )
