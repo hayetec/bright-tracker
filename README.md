@@ -186,7 +186,7 @@ Audit records are persisted in PostgreSQL through the `audit_logs` table.
 ### Student Meal Tracking
 
 - Create daily meal records for students
-- Track breakfast, lunch, and dinner participation
+- Track AM snack, lunch, and PM snack participation
 - View all meal records for a student
 - View a student's meal record by date
 - Update daily meal participation
@@ -430,9 +430,9 @@ Student
 ├── Meal Records
 │   └── student_meal_records
 │       ├── record_date
-│       ├── breakfast_eaten
+│       ├── am_snack_eaten
 │       ├── lunch_eaten
-│       └── dinner_eaten
+│       └── pm_snack_eaten
 │
 └── Allergies
     └── student_allergies

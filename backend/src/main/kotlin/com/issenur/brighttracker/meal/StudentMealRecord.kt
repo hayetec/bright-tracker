@@ -18,14 +18,14 @@ class StudentMealRecord(
     @Column(name = "record_date", nullable = false)
     var recordDate: LocalDate,
 
-    @Column(name = "breakfast_eaten", nullable = false)
-    var breakfastEaten: Boolean = false,
+    @Column(name = "am_snack_eaten", nullable = false)
+    var amSnackEaten: Boolean = false,
 
     @Column(name = "lunch_eaten", nullable = false)
     var lunchEaten: Boolean = false,
 
-    @Column(name = "dinner_eaten", nullable = false)
-    var dinnerEaten: Boolean = false,
+    @Column(name = "pm_snack_eaten", nullable = false)
+    var pmSnackEaten: Boolean = false,
 
     @Column(
         name = "created_at",
