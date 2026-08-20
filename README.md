@@ -396,6 +396,8 @@ It currently supports:
 - Student name and classroom display
 - Student allergy indicators
 - Daily meal status for each student
+- Search students by name
+- Filter students by classroom
 - ADMIN meal status updates
 - STAFF read-only meal status
 - Automatic dashboard refresh after meal updates

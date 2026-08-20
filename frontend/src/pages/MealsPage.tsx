@@ -26,11 +26,37 @@ export default function MealsPage() {
     const [dashboard, setDashboard] = useState<MealDashboard | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [selectedClassroom, setSelectedClassroom] = useState("ALL");
     const [updatingStudentId, setUpdatingStudentId] = useState<number | null>(
         null,
     );
 
     const date = getTodayDate();
+
+    const classrooms = Array.from(
+        new Set(
+            dashboard?.students
+                .map((student) => student.classroomName)
+                .filter((name): name is string => Boolean(name)),
+        ),
+    ).sort();
+
+    const filteredStudents =
+        dashboard?.students.filter((student) => {
+            const fullName =
+                `${student.firstName} ${student.lastName}`.toLowerCase();
+
+            const matchesSearch = fullName.includes(
+                searchTerm.trim().toLowerCase(),
+            );
+
+            const matchesClassroom =
+                selectedClassroom === "ALL" ||
+                student.classroomName === selectedClassroom;
+
+            return matchesSearch && matchesClassroom;
+        }) ?? [];
 
     useEffect(() => {
         async function loadDashboard() {
@@ -138,6 +164,28 @@ export default function MealsPage() {
                 />
             </div>
 
+            <div className="meal-filters">
+                <input
+                    type="search"
+                    placeholder="Search students..."
+                    value={searchTerm}
+                    onChange={(event) => setSearchTerm(event.target.value)}
+                />
+
+                <select
+                    value={selectedClassroom}
+                    onChange={(event) => setSelectedClassroom(event.target.value)}
+                >
+                    <option value="ALL">All classrooms</option>
+
+                    {classrooms.map((classroom) => (
+                        <option key={classroom} value={classroom}>
+                            {classroom}
+                        </option>
+                    ))}
+                </select>
+            </div>
+
             <div className="meal-table-wrapper">
                 <table className="meal-table">
                     <thead>
@@ -151,7 +199,7 @@ export default function MealsPage() {
                     </thead>
 
                     <tbody>
-                    {dashboard.students.map((student) => (
+                    {filteredStudents.map((student) => (
                         <tr key={student.studentId}>
                             <td>
                                 <strong>
@@ -199,6 +247,12 @@ export default function MealsPage() {
                             </td>
                         </tr>
                     ))}
+
+                    {filteredStudents.length === 0 && (
+                        <tr>
+                            <td colSpan={5}>No students found.</td>
+                        </tr>
+                    )}
                     </tbody>
                 </table>
             </div>
