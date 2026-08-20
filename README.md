@@ -593,6 +593,21 @@ cd backend
 
 The backend API runs locally on port `8080`.
 
+### Start Frontend
+
+From the project root:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend runs locally on port `5173`.
+
+During local development, Vite proxies `/api` requests to the Spring Boot API on port `8080`.
+
+
 ## Testing & Coverage
 
 Integration tests use JUnit 5, Spring Boot Test, MockMvc, Testcontainers,
