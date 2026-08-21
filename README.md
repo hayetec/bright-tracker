@@ -402,6 +402,18 @@ It currently supports:
 - STAFF read-only meal status
 - Automatic dashboard refresh after meal updates
 
+### Student Management
+
+The frontend student management page currently supports:
+
+- View all students
+- Search students by name
+- Display student date of birth, age group, and status
+- ADMIN student creation
+- ADMIN student updates
+- ADMIN student deletion
+- STAFF read-only access
+
 During local development, Vite runs on port `5173` and proxies `/api`
 requests to the Spring Boot application on port `8080`.
 
