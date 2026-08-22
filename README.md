@@ -414,6 +414,18 @@ The frontend student management page currently supports:
 - ADMIN student deletion
 - STAFF read-only access
 
+### Guardian Management
+
+The frontend guardian management page currently supports:
+
+- View all guardians
+- Search guardians by name, email, or phone number
+- Display guardian phone number and email
+- ADMIN guardian creation
+- ADMIN guardian updates
+- ADMIN guardian deletion
+- STAFF read-only access
+
 During local development, Vite runs on port `5173` and proxies `/api`
 requests to the Spring Boot application on port `8080`.
 
