@@ -438,6 +438,18 @@ The frontend classroom management page currently supports:
 - ADMIN classroom deletion
 - STAFF read-only access
 
+### Staff Management
+
+The frontend staff management page currently supports:
+
+- View all staff
+- Search staff by name, email, phone number, role, or status
+- Display staff name, role, email, phone number, and status
+- ADMIN staff creation
+- ADMIN staff updates
+- ADMIN staff deletion
+- STAFF read-only access
+
 During local development, Vite runs on port `5173` and proxies `/api`
 requests to the Spring Boot application on port `8080`.
 
