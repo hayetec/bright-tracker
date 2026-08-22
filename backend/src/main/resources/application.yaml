@@ -3,9 +3,9 @@ spring:
     name: bright-tracker
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/bright_tracker
-    username: bright_tracker
-    password: bright_tracker
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/bright_tracker}
+    username: ${DB_USERNAME:bright_tracker}
+    password: ${DB_PASSWORD:bright_tracker}
 
   jpa:
     hibernate:
