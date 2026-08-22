@@ -426,3 +426,99 @@
     padding: 0.75rem;
   }
 }
+
+.staff-page {
+  padding: 1rem;
+}
+
+.staff-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.staff-header h2 {
+  margin-bottom: 0.25rem;
+}
+
+.staff-header p {
+  margin-top: 0;
+}
+
+.staff-actions {
+  margin-bottom: 1rem;
+}
+
+.staff-actions button,
+.staff-form button {
+  min-height: 44px;
+  padding: 0.7rem 1rem;
+  font: inherit;
+}
+
+.staff-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.staff-form input,
+.staff-form select {
+  min-height: 44px;
+  padding: 0.7rem;
+  font: inherit;
+}
+
+.staff-filters {
+  margin-bottom: 1rem;
+}
+
+.staff-filters input {
+  width: min(100%, 24rem);
+  min-height: 44px;
+  padding: 0.75rem;
+  font: inherit;
+}
+
+.staff-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.staff-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.staff-table th,
+.staff-table td {
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 1px solid #ccc;
+}
+
+.staff-table th {
+  font-weight: 600;
+}
+
+.staff-table td button {
+  margin-right: 0.5rem;
+}
+
+@media (max-width: 800px) {
+  .staff-header {
+    flex-direction: column;
+  }
+
+  .staff-form {
+    grid-template-columns: 1fr;
+  }
+
+  .staff-table th,
+  .staff-table td {
+    padding: 0.75rem;
+  }
+}
