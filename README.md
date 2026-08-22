@@ -426,6 +426,18 @@ The frontend guardian management page currently supports:
 - ADMIN guardian deletion
 - STAFF read-only access
 
+### Classroom Management
+
+The frontend classroom management page currently supports:
+
+- View all classrooms
+- Search classrooms by name, age group, room number, or status
+- Display classroom name, age group, room number, capacity, and status
+- ADMIN classroom creation
+- ADMIN classroom updates
+- ADMIN classroom deletion
+- STAFF read-only access
+
 During local development, Vite runs on port `5173` and proxies `/api`
 requests to the Spring Boot application on port `8080`.
 
