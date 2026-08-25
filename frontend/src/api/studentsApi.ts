@@ -21,6 +21,20 @@ export async function getStudents(): Promise<Student[]> {
     return response.json();
 }
 
+export async function getStudentById(
+    studentId: number,
+): Promise<Student> {
+    const response = await apiFetch(`/api/students/${studentId}`);
+
+    if (!response.ok) {
+        throw new Error(
+            `Failed to load student: ${response.status}`,
+        );
+    }
+
+    return response.json();
+}
+
 export async function createStudent(
     student: StudentRequest,
 ): Promise<Student> {

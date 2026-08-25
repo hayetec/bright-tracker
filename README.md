@@ -450,6 +450,22 @@ The frontend staff management page currently supports:
 - ADMIN staff deletion
 - STAFF read-only access
 
+### Student Details
+
+The frontend student details page currently supports:
+
+- View student profile information
+- View current classroom enrollment
+- View linked guardians and relationship details
+- View guardian contact information
+- Identify primary and emergency contacts
+- View student allergies, severity, and notes
+- Handle students without classroom, guardian, or allergy records
+- Navigate to student details from the Students page
+- Navigate to student details from the Meals dashboard
+- Jump directly to allergy details from the Meals dashboard
+- ADMIN and STAFF read access
+
 During local development, Vite runs on port `5173` and proxies `/api`
 requests to the Spring Boot application on port `8080`.
 

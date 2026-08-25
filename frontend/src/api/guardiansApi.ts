@@ -20,6 +20,20 @@ export async function getGuardians(): Promise<Guardian[]> {
     return response.json();
 }
 
+export async function getGuardianById(
+    guardianId: number,
+): Promise<Guardian> {
+    const response = await apiFetch(`/api/guardians/${guardianId}`);
+
+    if (!response.ok) {
+        throw new Error(
+            `Failed to load guardian: ${response.status}`,
+        );
+    }
+
+    return response.json();
+}
+
 export async function createGuardian(
     guardian: GuardianRequest,
 ): Promise<Guardian> {
