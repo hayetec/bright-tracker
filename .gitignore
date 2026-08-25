@@ -78,3 +78,4 @@ api-spec/
 # Docker
 # =========================
 docker-data/
+keycloak/bright-tracker-realm.json
