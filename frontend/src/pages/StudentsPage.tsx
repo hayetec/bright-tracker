@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import {
     useEffect,
     useState,
@@ -243,7 +244,9 @@ export default function StudentsPage() {
                         <tr key={student.id}>
                             <td>
                                 <strong>
-                                    {student.firstName} {student.lastName}
+                                    <Link to={`/students/${student.id}`}>
+                                        {student.firstName} {student.lastName}
+                                    </Link>
                                 </strong>
                             </td>
                             <td>{student.dateOfBirth}</td>

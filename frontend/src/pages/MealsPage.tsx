@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
     getMealDashboard,
@@ -203,11 +204,18 @@ export default function MealsPage() {
                         <tr key={student.studentId}>
                             <td>
                                 <strong>
-                                    {student.firstName} {student.lastName}
+                                    <Link to={`/students/${student.studentId}`}>
+                                        {student.firstName} {student.lastName}
+                                    </Link>
                                 </strong>
 
                                 {student.hasAllergies && (
-                                    <span className="allergy-badge">Allergy</span>
+                                    <Link
+                                        to={`/students/${student.studentId}#allergies`}
+                                        className="allergy-badge"
+                                    >
+                                        Allergy
+                                    </Link>
                                 )}
                             </td>
 
