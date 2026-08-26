@@ -1,5 +1,8 @@
 import keycloak from "../auth/keycloak";
 
+const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL ?? "";
+
 export async function apiFetch(
     path: string,
     options: RequestInit = {},
@@ -14,7 +17,7 @@ export async function apiFetch(
         headers.set("Content-Type", "application/json");
     }
 
-    return fetch(path, {
+    return fetch(`${API_BASE_URL}${path}`, {
         ...options,
         headers,
     });
